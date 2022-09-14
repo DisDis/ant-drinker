@@ -16,6 +16,8 @@
 #include "SSD1306Wire.h"
 #include "Adafruit_Sensor.h"
 #include "Adafruit_AM2320.h"
+#include <Adafruit_GFX.h>
+#include <Adafruit_SSD1306.h>
 #include "DHT.h"
 #include <Preferences.h>
 #include "wificfg.h"
@@ -27,7 +29,7 @@
 #define SEPARATE_LINE "-------------------------------"
 
 // for 128x64 displays:
-SSD1306Wire display(0x3c, SDA, SCL); // ADDRESS, SDA, SCL
+Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
 
 // AM2320
 // Adafruit_AM2320 am2320 = Adafruit_AM2320();
@@ -109,15 +111,17 @@ void initButtons()
 void initDisplay()
 {
   Serial.print("  display...");
-  if (!display.init())
+  if (!display.begin(SSD1306_SWITCHCAPVCC, 0x3C))
   {
     Serial.println(F("SSD1306 allocation failed"));
     return;
   }
   Serial.println("OK");
-  display.flipScreenVertically();
-  display.setContrast(255);
-  display.clear();
+  // display.flipScreenVertically();
+  // display.setContrast(255);
+  display.setTextSize(1);
+  display.setTextColor(WHITE);
+  display.clearDisplay();
 }
 
 void initOTA()
@@ -163,8 +167,9 @@ void initShowSplashScreen()
 {
   Serial.print("  Splash...");
   // https://github.com/ThingPulse/esp8266-oled-ssd1306/
-  display.drawXbm((128-Splash_Logo_width)/2, 0, Splash_Logo_width, Splash_Logo_height, splash_Logo_bits);
-  display.drawString((128-Splash_Logo_width)/2 + Splash_Logo_width, 0, APP_VERSION);
+  display.drawBitmap((128 - Splash_Logo_width) / 2, 0, splash_Logo_bits, Splash_Logo_width, Splash_Logo_height, 1);
+  display.setCursor((128 - Splash_Logo_width) / 2 + Splash_Logo_width, 0);
+  display.println(APP_VERSION);
   display.display();
   Serial.println("OK");
 }
@@ -219,24 +224,25 @@ void setup()
   Serial.println(SEPARATE_LINE);
   Serial.println();
   delay(1000);
-  display.clear();
+  display.clearDisplay();
 }
 
 unsigned long currentMillis = millis();
 unsigned long previousMillis = 0;
 
+#define DISPLAYOFF 0xAE
+#define DISPLAYON 0xAF
+#define NORMALDISPLAY 0xA6
+#define INVERTDISPLAY 0xA7
+void displayOn(void)
+{
+  display.ssd1306_command(DISPLAYON);
+}
 
-// #define DISPLAYOFF 0xAE
-// #define DISPLAYON 0xAF
-// #define NORMALDISPLAY 0xA6
-// #define INVERTDISPLAY 0xA7
-// void displayOn(void) {
-//   display.sendCommand(DISPLAYON);
-// }
-
-// void displayOff(void) {
-//   display.sendCommand(DISPLAYOFF);
-// }
+void displayOff(void)
+{
+  display.ssd1306_command(DISPLAYOFF);
+}
 
 // void invertDisplay(void) {
 //   display.sendCommand(INVERTDISPLAY);
@@ -253,7 +259,7 @@ void controlDisplayTimeOff()
     if (currentMillis - state.lastActionMillis > config.automaticScreenOffTimeMs)
     {
       state.isDisplayOn = false;
-      display.displayOff();
+      displayOff();
       state.screenType = main;
     }
   }
@@ -262,18 +268,24 @@ void controlDisplayTimeOff()
     if (currentMillis - state.lastActionMillis < config.automaticScreenOffTimeMs)
     {
       state.isDisplayOn = true;
-      display.displayOn();
+      displayOn();
     }
   }
 }
 
 void showMainPage()
 {
-  display.clear();
-  display.drawString(0, 0, "Main page");
+  display.clearDisplay();
+  display.setCursor(0, 0);
+  display.println("Main page");
+  display.print("T: ");
+  display.printf("%.1f", state.currentTemperature);
+  display.print("H: ");
+  display.printf("%.1f", state.currentHumidity);
+  display.println();
   // display.drawStringf(0,10,"%.1f",(state.currentTemperature));
 
-  display.drawXbm(0, 0, Splash_Logo_width, Splash_Logo_height, splash_Logo_bits);
+  display.drawBitmap(64, 0, splash_Logo_bits, Splash_Logo_width, Splash_Logo_height, 1);
   display.display();
 }
 
@@ -317,11 +329,11 @@ void pollSensors()
     state.currentTemperature = am2320.readTemperature();
     state.currentHumidity = am2320.readHumidity();
     saveTHDateToLog();
-    Serial.print("T: ");
-    Serial.printf("%.1f", state.currentTemperature);
-    Serial.print("H: ");
-    Serial.printf("%.1f", state.currentHumidity);
-    Serial.println();
+    // Serial.print("T: ");
+    // Serial.printf("%.1f", state.currentTemperature);
+    // Serial.print("H: ");
+    // Serial.printf("%.1f", state.currentHumidity);
+    // Serial.println();
   }
 }
 
@@ -389,5 +401,5 @@ void loop()
   showCurrentState();
   pollSensors();
   pollButtons();
-  //menuLoop();
+  // menuLoop();
 }

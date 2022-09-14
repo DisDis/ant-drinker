@@ -5,6 +5,9 @@
 
 extern Preferences preferences;
 
+#define SCREEN_WIDTH 128 // OLED display width, in pixels
+#define SCREEN_HEIGHT 64 // OLED display height, in pixels
+
 #define RO_MODE true
 #define RW_MODE false
 
