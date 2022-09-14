@@ -25,8 +25,12 @@
 #include "splash.h"
 #include "config.h"
 #include "TimerMs.h"
+#include "menu_local.h"
+#include "state.h"
 
 #define SEPARATE_LINE "-------------------------------"
+
+AppState applicationState;
 
 // for 128x64 displays:
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
@@ -41,34 +45,6 @@ const char *ntpServer = "time.google.com";
 
 //
 TimerMs tmrButtons(50, 1, 0);
-
-// Set LED GPIO
-const int ledPin = 13;
-
-enum ScreenType
-{
-  graphT = 1,
-  main,
-  graphH,
-  menu
-};
-
-class State
-{
-public:
-  bool isDisplayOn = true;
-  unsigned long lastActionMillis = millis();
-  unsigned long lastTHUpdate = 0;
-  unsigned long lastWaterLevelUpdate = 0;
-  unsigned long lastSaveTHData = 0;
-  unsigned long lastBuzzerOn = 0;
-  float currentTemperature = 0.0;
-  float currentHumidity = 0.0;
-  ScreenType screenType = main;
-  // status
-  bool isWifi = false;
-};
-State state;
 
 // Initialize SPIFFS
 void initSPIFFS()
@@ -105,6 +81,7 @@ void initButtons()
   pinMode(ButtonRightPin, INPUT_PULLDOWN);
   pinMode(ButtonUpPin, INPUT_PULLDOWN);
   pinMode(ButtonDownPin, INPUT_PULLDOWN);
+  tmrButtons.setPeriodMode();
   Serial.println("OK");
 }
 
@@ -177,8 +154,8 @@ void initShowSplashScreen()
 void initLED()
 {
   Serial.print("  LED...");
-  pinMode(ledPin, OUTPUT);
-  digitalWrite(ledPin, LOW);
+  pinMode(LED_PIN, OUTPUT);
+  digitalWrite(LED_PIN, LOW);
   Serial.println("OK");
 }
 void initBuzzer()
@@ -202,16 +179,16 @@ void setup()
   initSPIFFS();
   initLED();
   initBuzzer();
-  tmrButtons.setPeriodMode();
+  menuSetup();
 
   if (initWiFi())
   {
-    state.isWifi = true;
+    applicationState.isWifi = true;
     initNormalWebServer();
   }
   else
   {
-    state.isWifi = false;
+    applicationState.isWifi = false;
     initAPWiFi();
     initAPWebServer();
   }
@@ -254,80 +231,102 @@ void displayOff(void)
 
 void controlDisplayTimeOff()
 {
-  if (state.isDisplayOn)
+  if (applicationState.isDisplayOn)
   {
-    if (currentMillis - state.lastActionMillis > config.automaticScreenOffTimeMs)
+    if (currentMillis - applicationState.lastActionMillis > config.automaticScreenOffTimeMs)
     {
-      state.isDisplayOn = false;
+      applicationState.isDisplayOn = false;
+      display.clearDisplay();
       displayOff();
-      state.screenType = main;
+      applicationState.currentPage = idlePage;
     }
   }
   else
   {
-    if (currentMillis - state.lastActionMillis < config.automaticScreenOffTimeMs)
+    if (currentMillis - applicationState.lastActionMillis < config.automaticScreenOffTimeMs)
     {
-      state.isDisplayOn = true;
+      applicationState.isDisplayOn = true;
       displayOn();
+      applicationState.currentPage = mainPage;
     }
   }
 }
 
-void showMainPage()
+void loopMainPage()
 {
   display.clearDisplay();
+  display.setTextSize(1);
+  display.setTextColor(WHITE);
   display.setCursor(0, 0);
-  display.println("Main page");
-  display.print("T: ");
-  display.printf("%.1f", state.currentTemperature);
-  display.print("H: ");
-  display.printf("%.1f", state.currentHumidity);
+  display.printf("T:%.1f H:%.1f", applicationState.currentTemperature, applicationState.currentHumidity);
   display.println();
-  // display.drawStringf(0,10,"%.1f",(state.currentTemperature));
+  display.print("RRSI: ");
+  display.println(WiFi.RSSI());
 
   display.drawBitmap(64, 0, splash_Logo_bits, Splash_Logo_width, Splash_Logo_height, 1);
   display.display();
+  if (applicationState.buttonClick){
+    applicationState.currentPage = menuPage;
+  }
 }
 
-void showCurrentState()
+void loopMenuPage(){
+    menuLoop();
+}
+
+void loopIdlePage(){
+  delay(10);
+  if (applicationState.buttonClick){
+    applicationState.currentPage = mainPage;
+  }
+  if (applicationState.buttonDown || applicationState.buttonDown){
+    applicationState.currentPage = menuPage;
+  }
+}
+
+void executeCurrentState()
 {
-  if (!state.isDisplayOn)
+  if (!applicationState.isDisplayOn)
   {
     return;
   }
-  switch (state.screenType)
+  switch (applicationState.currentPage)
   {
-  case (graphT):
+  case (graphTPage):
     break;
-  case (main):
-    showMainPage();
+  case (mainPage):
+    loopMainPage();
     break;
-  case (graphH):
+  case (graphHPage):
     break;
-  case (menu):
+  case (menuPage):
+    loopMenuPage();
+    break;
+  case (idlePage):
+    loopIdlePage();
     break;
   default:
-    state.screenType = menu;
+    applicationState.currentPage = mainPage;
   }
 }
 
 void saveTHDateToLog()
 {
   // 1 min
-  if (currentMillis - state.lastSaveTHData > 60 * 1000)
+  if (currentMillis - applicationState.lastSaveTHData > 60 * 1000)
   {
-    state.lastSaveTHData = currentMillis;
+    applicationState.lastSaveTHData = currentMillis;
     // TODO: Save T&H data
   }
 }
 
 void pollSensors()
 {
-  if (currentMillis - state.lastTHUpdate > 2000)
+  if (currentMillis - applicationState.lastTHUpdate > 2000)
   {
-    state.lastTHUpdate = currentMillis;
-    state.currentTemperature = am2320.readTemperature();
-    state.currentHumidity = am2320.readHumidity();
+    applicationState.lastTHUpdate = currentMillis;
+    applicationState.currentTemperature = am2320.readTemperature();
+    applicationState.currentHumidity = am2320.readHumidity();
     saveTHDateToLog();
     // Serial.print("T: ");
     // Serial.printf("%.1f", state.currentTemperature);
@@ -351,44 +350,47 @@ void pollButtons()
   {
 
     currentState = digitalRead(ButtonClickPin);
-    if (lastStateC == HIGH && currentState == LOW)
+    applicationState.buttonClick = lastStateC == HIGH && currentState == LOW;
+    if (applicationState.buttonClick)
     {
       Serial.println("Click");
-      state.lastActionMillis = currentMillis;
+      applicationState.lastActionMillis = currentMillis;
     }
     lastStateC = currentState;
 
     currentState = digitalRead(ButtonLeftPin);
-    if (lastStateL == HIGH && currentState == LOW)
+    applicationState.buttonLeft = lastStateL == HIGH && currentState == LOW;
+    if (applicationState.buttonLeft)
     {
       Serial.println("Left");
-      state.lastActionMillis = currentMillis;
+      applicationState.lastActionMillis = currentMillis;
     }
     lastStateL = currentState;
 
     currentState = digitalRead(ButtonRightPin);
-    if (lastStateR == HIGH && currentState == LOW)
+    applicationState.buttonRight = lastStateL == HIGH && currentState == LOW;
+    if (applicationState.buttonRight)
     {
       Serial.println("Right");
-      state.lastActionMillis = currentMillis;
+      applicationState.lastActionMillis = currentMillis;
     }
     lastStateR = currentState;
 
     currentState = digitalRead(ButtonUpPin);
-    if (lastStateU == HIGH && currentState == LOW)
+    applicationState.buttonUp = lastStateL == HIGH && currentState == LOW;
+    if (applicationState.buttonUp)
     {
       Serial.println("Up");
-      digitalWrite(ledPin, HIGH);
-      state.lastActionMillis = currentMillis;
+      applicationState.lastActionMillis = currentMillis;
     }
     lastStateU = currentState;
 
     currentState = digitalRead(ButtonDownPin);
-    if (lastStateD == HIGH && currentState == LOW)
+    applicationState.buttonDown = lastStateL == HIGH && currentState == LOW;
+    if (applicationState.buttonDown)
     {
       Serial.println("Down");
-      digitalWrite(ledPin, LOW);
-      state.lastActionMillis = currentMillis;
+      applicationState.lastActionMillis = currentMillis;
     }
     lastStateD = currentState;
   }
@@ -397,9 +399,8 @@ void pollButtons()
 void loop()
 {
   currentMillis = millis();
-  controlDisplayTimeOff();
-  showCurrentState();
-  pollSensors();
   pollButtons();
-  // menuLoop();
+  controlDisplayTimeOff();
+  executeCurrentState();
+  pollSensors();
 }
