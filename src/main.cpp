@@ -13,7 +13,6 @@
 #include "SPIFFS.h"
 #include <AsyncElegantOTA.h>
 #include <Wire.h>
-#include "SSD1306Wire.h"
 #include "Adafruit_Sensor.h"
 #include "Adafruit_AM2320.h"
 #include <Adafruit_GFX.h>
@@ -36,9 +35,9 @@ AppState applicationState;
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
 
 // AM2320
-// Adafruit_AM2320 am2320 = Adafruit_AM2320();
+// Adafruit_AM2320 sensorTH = Adafruit_AM2320();
 // DHT22/AM2302
-DHT am2320 = DHT(DHTPin, DHTTYPE);
+DHT sensorTH = DHT(DHTPin, DHTTYPE);
 
 // NTP
 const char *ntpServer = "time.google.com";
@@ -61,7 +60,7 @@ void initSensors()
 {
   Serial.println("  sensors:");
   // Serial.print("    AM2320..");
-  // if (!am2320.begin())
+  // if (!sensorTH.begin())
   // {
   //   Serial.println(F("am2320 failed"));
   // } else { Serial.println("OK");}
@@ -69,7 +68,7 @@ void initSensors()
   // DHT
   Serial.print("    DHT...");
   pinMode(DHTPin, INPUT);
-  am2320.begin();
+  sensorTH.begin();
   Serial.println("OK");
 }
 
@@ -233,7 +232,7 @@ void controlDisplayTimeOff()
 {
   if (applicationState.isDisplayOn)
   {
-    if (currentMillis - applicationState.lastActionMillis > config.automaticScreenOffTimeMs)
+    if (currentMillis - applicationState.lastActionMillis > appConfig.automaticScreenOffTimeMs)
     {
       applicationState.isDisplayOn = false;
       display.clearDisplay();
@@ -243,7 +242,7 @@ void controlDisplayTimeOff()
   }
   else
   {
-    if (currentMillis - applicationState.lastActionMillis < config.automaticScreenOffTimeMs)
+    if (currentMillis - applicationState.lastActionMillis < appConfig.automaticScreenOffTimeMs)
     {
       applicationState.isDisplayOn = true;
       displayOn();
@@ -325,8 +324,8 @@ void pollSensors()
   if (currentMillis - applicationState.lastTHUpdate > 2000)
   {
     applicationState.lastTHUpdate = currentMillis;
-    applicationState.currentTemperature = am2320.readTemperature();
-    applicationState.currentHumidity = am2320.readHumidity();
+    applicationState.currentTemperature = sensorTH.readTemperature();
+    applicationState.currentHumidity = sensorTH.readHumidity();
     saveTHDateToLog();
     // Serial.print("T: ");
     // Serial.printf("%.1f", state.currentTemperature);

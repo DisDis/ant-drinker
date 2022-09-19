@@ -1,7 +1,7 @@
 #include "config.h"
 
 Preferences preferences;
-Config config;
+Config appConfig;
 
 Config::Config(){
 

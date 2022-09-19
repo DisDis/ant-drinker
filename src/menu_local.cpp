@@ -26,10 +26,11 @@
 #include <menuIO/serialOut.h>
 #include <menuIO/keyIn.h>
 #include "state.h"
+#include "i18n/en.h"
 //#include <menuIO/chainStream.h>
 using namespace Menu;
 
-// SSD1306AsciiWire oled;
+//https://github.com/neu-rah/ArduinoMenu/blob/master/examples/targetSel/targetSel/targetSel.ino
 
 const colorDef<uint16_t> colors[6] MEMMODE = {
     {{WHITE, BLACK}, {WHITE, BLACK, BLACK}}, // bgColor
@@ -162,6 +163,11 @@ public:
 
 MENU(subMenu, "Sub-Menu", showEvent, anyEvent, noStyle, OP("Sub1", showEvent, anyEvent), OP("Sub2", showEvent, anyEvent), OP("Sub3", showEvent, anyEvent), altOP(altPrompt, "", showEvent, anyEvent), EXIT("<Back"));
 
+
+MENU(waterTanksMenu, "Water tanks", showEvent, anyEvent, noStyle, 
+    FIELD(appConfig.wTank1.capacity, "Capacity", "ml", 10, 9999, 10, 1, doNothing, enterEvent, wrapStyle), EXIT("<Back"));
+
+
 MENU(mainMenu, "Main menu", doNothing, noEvent, wrapStyle, OP("Op1", action1, anyEvent), OP("Op2", action2, enterEvent)
      /* FIELD Parameters :
 
@@ -170,7 +176,9 @@ MENU(mainMenu, "Main menu", doNothing, noEvent, wrapStyle, OP("Op1", action1, an
         range_decrement_step
      */
      ,
-     FIELD(brightnessValue, "Brightness", "%", 0, 100, 5, 5, adjustBrightness, enterEvent, wrapStyle), SUBMENU(subMenu), SUBMENU(setLed), OP("LED On", internalLedOn, enterEvent) // will turn on built-in LED
+     FIELD(brightnessValue, "Brightness", "%", 0, 100, 5, 5, adjustBrightness, enterEvent, wrapStyle), SUBMENU(subMenu), SUBMENU(setLed),
+     SUBMENU(waterTanksMenu),
+      OP("LED On", internalLedOn, enterEvent) // will turn on built-in LED
      ,
      OP("LED Off", internalLedOff, enterEvent) // will turn off built-in LED
      ,
@@ -271,7 +279,6 @@ void menuSetup()
 void menuLoop()
 {
     //    nav.poll();
-
     nav.doInput();
     if (nav.changed(0))
     { // only draw if changed

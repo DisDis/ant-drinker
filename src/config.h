@@ -34,6 +34,9 @@ extern Adafruit_SSD1306 display;
 #define LED_PIN 13
 #define LED_BUILTIN 16
 
+struct WaterTank{
+  int capacity = 100;
+};
 
 class Config{
     public:
@@ -41,12 +44,14 @@ class Config{
       unsigned long automaticScreenOffTimeMs = 5*60*1000; 
       bool isBuzzerOn = true;
       unsigned long buzzerNotificationRepeatTime = 1*60*60*1000;
+      WaterTank wTank1;
+      WaterTank wTank2;
       Config();
 
     private:
 
 };
 
-extern Config config;
+extern Config appConfig;
 
 #endif
