@@ -21,6 +21,7 @@
 
 // #include <Wire.h>
 #include "config.h"
+#include "display.h"
 #include <menu.h>
 #include <menuIO/adafruitGfxOut.h>
 #include <menuIO/serialOut.h>

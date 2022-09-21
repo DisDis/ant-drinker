@@ -24,15 +24,16 @@
 #include "splash.h"
 #include "config.h"
 #include "TimerMs.h"
+#include "display.h"
 #include "menu_local.h"
 #include "state.h"
+#include "pump.h"
+#include "pump_controller.h"
+#include "buzzer.h"
 
 #define SEPARATE_LINE "-------------------------------"
 
 AppState applicationState;
-
-// for 128x64 displays:
-Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
 
 // AM2320
 // Adafruit_AM2320 sensorTH = Adafruit_AM2320();
@@ -40,7 +41,28 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
 DHT sensorTH = DHT(DHTPin, DHTTYPE);
 
 // NTP
-const char *ntpServer = "time.google.com";
+const char *ntpServer1 = "time.google.com";
+const char *ntpServer2 = "clock.isc.org";
+const char *ntpServer3 = "ntp.ix.ru";
+
+DisplayDevice displayDevice;
+BuzzerDevice buzzerDevice;
+
+Pump pump1(MOTORA_PWM_PIN, MOTORA_DIR0_PIN, MOTORA_DIR1_PIN);
+Pump pump2(MOTORB_PWM_PIN, MOTORB_DIR0_PIN, MOTORB_DIR1_PIN);
+extern void providePump1(unsigned long ml);
+extern void providePump2(unsigned long ml);
+PumpController pumpController1("pump1", &pump1, providePump1);
+PumpController pumpController2("pump2", &pump2, providePump2);
+
+void providePump1(unsigned long ml)
+{
+  Serial.printf("Pump1: %lu\n", ml);
+}
+void providePump2(unsigned long ml)
+{
+  Serial.printf("Pump2: %lu\n", ml);
+}
 
 //
 TimerMs tmrButtons(50, 1, 0);
@@ -84,69 +106,10 @@ void initButtons()
   Serial.println("OK");
 }
 
-void initDisplay()
-{
-  Serial.print("  display...");
-  if (!display.begin(SSD1306_SWITCHCAPVCC, 0x3C))
-  {
-    Serial.println(F("SSD1306 allocation failed"));
-    return;
-  }
-  Serial.println("OK");
-  // display.flipScreenVertically();
-  // display.setContrast(255);
-  display.setTextSize(1);
-  display.setTextColor(WHITE);
-  display.clearDisplay();
-}
-
 void initOTA()
 {
   Serial.print("  OTA...");
   AsyncElegantOTA.begin(&server);
-  Serial.println("OK");
-}
-
-void printTime()
-{
-
-  struct tm time;
-
-  if (!getLocalTime(&time))
-  {
-    Serial.println("Could not obtain time info");
-    return;
-  }
-
-  Serial.println("\n---------TIME----------");
-
-  Serial.print("Number of years since 1900: ");
-  Serial.println(time.tm_year);
-
-  Serial.print("month, from 0 to 11: ");
-  Serial.println(time.tm_mon);
-
-  Serial.print("day, from 1 to 31: ");
-  Serial.println(time.tm_mday);
-
-  Serial.print("hour, from 0 to 23: ");
-  Serial.println(time.tm_hour);
-
-  Serial.print("minute, from 0 to 59: ");
-  Serial.println(time.tm_min);
-
-  Serial.print("second, from 0 to 59: ");
-  Serial.println(time.tm_sec);
-}
-
-void initShowSplashScreen()
-{
-  Serial.print("  Splash...");
-  // https://github.com/ThingPulse/esp8266-oled-ssd1306/
-  display.drawBitmap((128 - Splash_Logo_width) / 2, 0, splash_Logo_bits, Splash_Logo_width, Splash_Logo_height, 1);
-  display.setCursor((128 - Splash_Logo_width) / 2 + Splash_Logo_width, 0);
-  display.println(APP_VERSION);
-  display.display();
   Serial.println("OK");
 }
 
@@ -157,12 +120,31 @@ void initLED()
   digitalWrite(LED_PIN, LOW);
   Serial.println("OK");
 }
-void initBuzzer()
+void initPumps()
 {
-  Serial.print("  Buzzer...");
-  // pinMode(ledPin, OUTPUT);
-  // digitalWrite(ledPin, LOW);
+  Serial.print("  Pumps...");
+  pump1.init();
+  pump2.init();
+  pumpController1.init();
+  pumpController2.init();
   Serial.println("OK");
+}
+
+void initNTP()
+{
+  Serial.print("  NTP...");
+  configTime(0, 3600 * 3 /*+3 GMT*/, ntpServer1, ntpServer2, ntpServer3);
+  struct tm timeinfo;
+
+  if (!getLocalTime(&timeinfo))
+  {
+    Serial.println(" Error: Could not obtain time info");
+    return;
+  }
+  char output[80];
+  strftime(output, 80, DATATIME_FORMAT, &timeinfo);
+  Serial.print(output);
+  Serial.println(" ... OK");
 }
 
 void setup()
@@ -171,13 +153,13 @@ void setup()
   Serial.begin(115200);
   Serial.println(SEPARATE_LINE);
   Serial.println("Init system:");
-  initDisplay();
-  initShowSplashScreen();
+  displayDevice.init();
   initButtons();
+  initPumps();
   initSensors();
   initSPIFFS();
   initLED();
-  initBuzzer();
+  buzzerDevice.init();
   menuSetup();
 
   if (initWiFi())
@@ -193,8 +175,7 @@ void setup()
   }
   initOTA();
   server.begin();
-  configTime(0, 3600, ntpServer);
-  printTime();
+  initNTP();
 
   Serial.println("System is initialized");
   Serial.println(SEPARATE_LINE);
@@ -203,54 +184,13 @@ void setup()
   display.clearDisplay();
 }
 
-unsigned long currentMillis = millis();
 unsigned long previousMillis = 0;
+unsigned long currentMillis = millis();
 
-#define DISPLAYOFF 0xAE
-#define DISPLAYON 0xAF
-#define NORMALDISPLAY 0xA6
-#define INVERTDISPLAY 0xA7
-void displayOn(void)
-{
-  display.ssd1306_command(DISPLAYON);
-}
-
-void displayOff(void)
-{
-  display.ssd1306_command(DISPLAYOFF);
-}
-
-// void invertDisplay(void) {
-//   display.sendCommand(INVERTDISPLAY);
-// }
-
-// void normalDisplay(void) {
-//   display.sendCommand(NORMALDISPLAY);
-// }
-
-void controlDisplayTimeOff()
-{
-  if (applicationState.isDisplayOn)
-  {
-    if (currentMillis - applicationState.lastActionMillis > appConfig.automaticScreenOffTimeMs)
-    {
-      applicationState.isDisplayOn = false;
-      display.clearDisplay();
-      displayOff();
-      applicationState.currentPage = idlePage;
-    }
-  }
-  else
-  {
-    if (currentMillis - applicationState.lastActionMillis < appConfig.automaticScreenOffTimeMs)
-    {
-      applicationState.isDisplayOn = true;
-      displayOn();
-      applicationState.currentPage = mainPage;
-    }
-  }
-}
-
+// TODO: Remove!
+char output[80];
+struct tm timeinfo;
+time_t now;
 void loopMainPage()
 {
   display.clearDisplay();
@@ -261,24 +201,32 @@ void loopMainPage()
   display.println();
   display.print("RRSI: ");
   display.println(WiFi.RSSI());
-
+  time(&now);
+  localtime_r(&now, &timeinfo);
+  strftime(output, 80, DATATIME_FORMAT, &timeinfo);
+  display.println(output);
   display.drawBitmap(64, 0, splash_Logo_bits, Splash_Logo_width, Splash_Logo_height, 1);
   display.display();
-  if (applicationState.buttonClick){
+  if (applicationState.buttonClick)
+  {
     applicationState.currentPage = menuPage;
   }
 }
 
-void loopMenuPage(){
-    menuLoop();
+void loopMenuPage()
+{
+  menuLoop();
 }
 
-void loopIdlePage(){
+void loopIdlePage()
+{
   delay(10);
-  if (applicationState.buttonClick){
+  if (applicationState.buttonClick)
+  {
     applicationState.currentPage = mainPage;
   }
-  if (applicationState.buttonDown || applicationState.buttonDown){
+  if (applicationState.buttonDown || applicationState.buttonDown)
+  {
     applicationState.currentPage = menuPage;
   }
 }
@@ -399,7 +347,8 @@ void loop()
 {
   currentMillis = millis();
   pollButtons();
-  controlDisplayTimeOff();
+  displayDevice.detectTimeOff();
+  buzzerDevice.loop();
   executeCurrentState();
   pollSensors();
 }

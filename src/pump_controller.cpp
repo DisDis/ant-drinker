@@ -2,14 +2,13 @@
 #include "SimpleTimer.h"
 #include "pump_controller.h"
 
-
 void PumpController::_runPump()
 {
-    /// TODO: PIN - PWM
+    pump->start(power, isInverted);
 }
 void PumpController::_stopPump()
 {
-    /// TODO: PIN - LOW
+    pump->stop();
 }
 
 PumpMode PumpController::calculateMode()
@@ -26,14 +25,16 @@ PumpMode PumpController::calculateMode()
     return result;
 }
 
-PumpController::PumpController(const char *id, ON_FINISH_WORK_CALLBACK finishWorkCallback)
+PumpController::PumpController(const char *id, Pump* pump, ON_FINISH_WORK_CALLBACK finishWorkCallback)
 {
     this->_id = id;
+    this->pump = pump;
     this->finishWorkCallback = finishWorkCallback;
+    this->mode = calculateMode();
 }
 void PumpController::_executeStartWork()
 {
-    if (!tmrAction.elapsed())
+    if (!tmrAction.isHappened())
     {
         return;
     }
@@ -124,6 +125,7 @@ void PumpController::_executeCalibrationProcess()
         return;
     }
     tmrCalibration.stop();
+    mode = NotCalibratedMode;
     _stopPump();
 }
 void PumpController::finishCalibration()
