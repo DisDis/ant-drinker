@@ -36,8 +36,8 @@ void DisplayDevice::showSplashScreen()
 {
     Serial.print("  Splash...");
     // https://github.com/ThingPulse/esp8266-oled-ssd1306/
-    display.drawBitmap((128 - Splash_Logo_width) / 2, 0, splash_Logo_bits, Splash_Logo_width, Splash_Logo_height, 1);
-    display.setCursor((128 - Splash_Logo_width) / 2 + Splash_Logo_width, 0);
+    display.drawBitmap((SCREEN_WIDTH - Splash_Logo_width) / 2, 0, splash_Logo_bits, Splash_Logo_width, Splash_Logo_height, 1);
+    display.setCursor((SCREEN_WIDTH - Splash_Logo_width) / 2 + Splash_Logo_width, 0);
     display.println(APP_VERSION);
     display.display();
     Serial.println("OK");
@@ -47,7 +47,7 @@ void DisplayDevice::detectTimeOff()
 {
     if (applicationState.isDisplayOn)
     {
-        if (currentMillis - applicationState.lastActionMillis > appConfig.automaticScreenOffTimeMs)
+        if (currentMillis - applicationState.lastActionMillis > automaticScreenOffTimeMs)
         {
             applicationState.isDisplayOn = false;
             display.clearDisplay();
@@ -57,7 +57,7 @@ void DisplayDevice::detectTimeOff()
     }
     else
     {
-        if (currentMillis - applicationState.lastActionMillis < appConfig.automaticScreenOffTimeMs)
+        if (currentMillis - applicationState.lastActionMillis < automaticScreenOffTimeMs)
         {
             applicationState.isDisplayOn = true;
             turnOn();

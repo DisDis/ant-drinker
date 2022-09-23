@@ -30,6 +30,7 @@
 #include "pump.h"
 #include "pump_controller.h"
 #include "buzzer.h"
+#include "global_time.h"
 
 #define SEPARATE_LINE "-------------------------------"
 
@@ -40,13 +41,11 @@ AppState applicationState;
 // DHT22/AM2302
 DHT sensorTH = DHT(DHTPin, DHTTYPE);
 
-// NTP
-const char *ntpServer1 = "time.google.com";
-const char *ntpServer2 = "clock.isc.org";
-const char *ntpServer3 = "ntp.ix.ru";
+
 
 DisplayDevice displayDevice;
 BuzzerDevice buzzerDevice;
+GlobalTime globalTime;
 
 Pump pump1(MOTORA_PWM_PIN, MOTORA_DIR0_PIN, MOTORA_DIR1_PIN);
 Pump pump2(MOTORB_PWM_PIN, MOTORB_DIR0_PIN, MOTORB_DIR1_PIN);
@@ -130,23 +129,6 @@ void initPumps()
   Serial.println("OK");
 }
 
-void initNTP()
-{
-  Serial.print("  NTP...");
-  configTime(0, 3600 * 3 /*+3 GMT*/, ntpServer1, ntpServer2, ntpServer3);
-  struct tm timeinfo;
-
-  if (!getLocalTime(&timeinfo))
-  {
-    Serial.println(" Error: Could not obtain time info");
-    return;
-  }
-  char output[80];
-  strftime(output, 80, DATATIME_FORMAT, &timeinfo);
-  Serial.print(output);
-  Serial.println(" ... OK");
-}
-
 void setup()
 {
   // Serial port for debugging purposes
@@ -154,13 +136,7 @@ void setup()
   Serial.println(SEPARATE_LINE);
   Serial.println("Init system:");
   displayDevice.init();
-  initButtons();
-  initPumps();
-  initSensors();
   initSPIFFS();
-  initLED();
-  buzzerDevice.init();
-  menuSetup();
 
   if (initWiFi())
   {
@@ -175,7 +151,13 @@ void setup()
   }
   initOTA();
   server.begin();
-  initNTP();
+  globalTime.init();
+  initButtons();
+  initPumps();
+  initSensors();
+  initLED();
+  buzzerDevice.init();
+  menuSetup();
 
   Serial.println("System is initialized");
   Serial.println(SEPARATE_LINE);
@@ -351,4 +333,5 @@ void loop()
   buzzerDevice.loop();
   executeCurrentState();
   pollSensors();
+  globalTime.loop();
 }

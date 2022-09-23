@@ -43,7 +43,7 @@ void BuzzerDevice::_turnOnSound()
     digitalWrite(BUZZER_PIN, HIGH);
 }
 
-void BuzzerDevice::turnOn(char count = 1)
+void BuzzerDevice::turnOn(char count)
 {
     if (enabled)
     {

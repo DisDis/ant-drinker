@@ -14,8 +14,9 @@ extern Adafruit_SSD1306 display;
 class DisplayDevice
 {
 private:
+    ///default 5 min
+    unsigned long automaticScreenOffTimeMs = 5*60*1000; 
     void showSplashScreen();
-
 public:
     DisplayDevice();
     void init();

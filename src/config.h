@@ -4,6 +4,7 @@
 #include <Preferences.h>
 #include <Adafruit_SSD1306.h>
 #include "pump_controller.h"
+#include "global_time.h"
 
 extern Preferences preferences;
 extern unsigned long currentMillis;
@@ -20,6 +21,9 @@ extern unsigned long currentMillis;
 #define wifiPassKey "pass"
 
 #define wifiConfigKey "credentials"
+#define globalTimeConfigKey "datetime"
+
+#define globalTimeKey "dt"
 
 //#define SENSOR_TEM_HYM 
 #define DHTTYPE DHT22
@@ -55,10 +59,6 @@ struct WaterTank{
 
 class Config{
     public:
-    ///default 5 min
-      unsigned long automaticScreenOffTimeMs = 5*60*1000; 
-      bool isBuzzerOn = true;
-      unsigned long buzzerNotificationRepeatTime = 1*60*60*1000;
       WaterTank wTank1;
       WaterTank wTank2;
       Config();
