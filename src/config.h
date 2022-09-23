@@ -5,9 +5,23 @@
 #include <Adafruit_SSD1306.h>
 #include "pump_controller.h"
 #include "global_time.h"
+#include "pump.h"
+#include "pump_controller.h"
+#include "buzzer.h"
+#include "water_tank.h"
+
 
 extern Preferences preferences;
 extern unsigned long currentMillis;
+extern BuzzerDevice buzzerDevice;
+extern GlobalTime globalTime;
+
+extern WaterTank waterTank1;
+extern WaterTank waterTank2;
+extern Pump pump1;
+extern Pump pump2;
+extern PumpController pumpController1;
+extern PumpController pumpController2;
 
 #define SCREEN_WIDTH 128 // OLED display width, in pixels
 #define SCREEN_HEIGHT 64 // OLED display height, in pixels
@@ -53,14 +67,10 @@ extern unsigned long currentMillis;
 #define LED_PIN 13
 #define LED_BUILTIN 16
 
-struct WaterTank{
-  int capacity = 100;
-};
+
 
 class Config{
     public:
-      WaterTank wTank1;
-      WaterTank wTank2;
       Config();
       void load(PumpController* pc);
     private:

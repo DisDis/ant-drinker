@@ -7,7 +7,6 @@ class BuzzerDevice
 {
 private:
     // unsigned char doNotdisturb = 21;
-    bool enabled = false;
     bool sound = false;
     char count = 0;
     TimerMs interval = TimerMs(1000, 0, 0);
@@ -15,6 +14,7 @@ private:
     void _turnOnSound();
 
 public:
+    bool enabled = false;
     BuzzerDevice();
     void init();
     void loop();

@@ -26,4 +26,6 @@ public:
     void detectTimeOff();
 };
 
+extern DisplayDevice displayDevice;
+
 #endif

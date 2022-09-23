@@ -1,5 +1,5 @@
-#include "global_time.h"
 #include <Arduino.h>
+#include "global_time.h"
 #include "config.h"
 
 // NTP

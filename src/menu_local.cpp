@@ -31,7 +31,7 @@
 //#include <menuIO/chainStream.h>
 using namespace Menu;
 
-//https://github.com/neu-rah/ArduinoMenu/blob/master/examples/targetSel/targetSel/targetSel.ino
+// https://github.com/neu-rah/ArduinoMenu/blob/master/examples/targetSel/targetSel/targetSel.ino
 
 const colorDef<uint16_t> colors[6] MEMMODE = {
     {{WHITE, BLACK}, {WHITE, BLACK, BLACK}}, // bgColor
@@ -60,7 +60,7 @@ const colorDef<uint16_t> colors[6] MEMMODE = {
 
 #define TOTAL_NAV_BUTTONS 4 // Total Navigation Button used
 
-#define MAX_DEPTH 2
+#define MAX_DEPTH 4
 
 #ifdef LOC
 // #define LARGE_FONT
@@ -78,6 +78,7 @@ const colorDef<uint16_t> colors[6] MEMMODE = {
 #define fontW 5
 #define fontH 8
 #endif
+
 
 int ledCtrl = HIGH; // Default LED State of LED at D11 is LOW
 
@@ -126,6 +127,94 @@ result internalLedOff()
     return proceed;
 }
 
+// ----------------- Water tanks
+TOGGLE(waterTank1.enabled, waterTank1OnOff, "Enabled: ", doNothing, noEvent, wrapStyle, VALUE("Off", false, doNothing, noEvent), VALUE("On", true, doNothing, noEvent));
+
+MENU(tank1Menu, "B1", showEvent, anyEvent, noStyle,
+     SUBMENU(waterTank1OnOff),
+     FIELD(waterTank1.capacity, "Capacity", "ml", 10, 99999, 10, 1, doNothing, enterEvent, wrapStyle),
+     FIELD(waterTank1.value, "Left", "ml", 0, 99999, 10, 1, doNothing, enterEvent, wrapStyle),
+     
+     OP("Reset", action1, anyEvent),
+     EXIT("<Back"));
+// MENU(tank2Menu, "B2", showEvent, anyEvent, noStyle,  FIELD(waterTank2.capacity, "Capacity", "ml", 10, 9999, 10, 1, doNothing, enterEvent, wrapStyle),     EXIT("<Back"));
+
+// SUBMENU(tank2Menu),
+
+MENU(waterTanksMenu, "Water tanks", showEvent, anyEvent, noStyle,
+     SUBMENU(tank1Menu),
+     EXIT("<Back"));
+// ---------
+
+// ------- Date/Time
+MENU(dateTimeMenu, "Date/Time[STUB]", showEvent, anyEvent, noStyle,
+     OP("Data: 24.09.2022", action1, anyEvent),
+     OP("Time: 10:42", action1, anyEvent),
+     OP("Time zone: +3", action1, anyEvent),
+     EXIT("<Back"));
+// --------
+
+// ------------ Dispensers
+TOGGLE(pumpController1.isEnabled,pumpController1OnOff, "Enabled: ", doNothing, noEvent, wrapStyle, VALUE("Off", false, doNothing, noEvent), VALUE("On", true, doNothing, noEvent));
+TOGGLE(pumpController1.isInverted,pumpController1Invert, "Dir: ", doNothing, noEvent, wrapStyle, VALUE("Right", false, doNothing, noEvent), VALUE("Left", false, doNothing, noEvent));
+
+MENU(pumpController1CalibrationMenu, "Calibration[STUB]", showEvent, anyEvent, noStyle,
+     OP("O1", action1, anyEvent),
+     OP("O2", action1, anyEvent),
+     OP("O3", action1, anyEvent),
+     EXIT("<Back"));
+
+MENU(pumpController1Menu, "Pump1[STUB]", showEvent, anyEvent, noStyle,
+     SUBMENU(pumpController1OnOff),
+     OP("Mode: Ready", action1, anyEvent),
+     FIELD(pumpController1.mlAtTime, "Count", "ml", 10, 99999, 10, 1, doNothing, enterEvent, wrapStyle),
+     OP("Interval: 5 hour", action1, anyEvent),
+     OP("Stop pump", action1, anyEvent),
+     OP("Start pump", action1, anyEvent),
+     OP("Emergency Stop", action1, anyEvent),
+     SUBMENU(pumpController1CalibrationMenu),
+     SUBMENU(pumpController1Invert),
+     EXIT("<Back"));
+
+
+MENU(dispensersMenu, "Dispensers", showEvent, anyEvent, noStyle,
+     SUBMENU(pumpController1Menu),
+     EXIT("<Back"));
+// --------
+
+// ------------ Notification
+MENU(notificationMenu, "Notification[STUB]", showEvent, anyEvent, noStyle,
+     OP("On/Off", action1, anyEvent),
+     EXIT("<Back"));
+// --------
+// ------------ Buzzer
+TOGGLE(buzzerDevice.enabled, buzzerOnOff, "Enabled: ", doNothing, noEvent, wrapStyle, VALUE("Off", false, doNothing, noEvent), VALUE("On", true, doNothing, noEvent));
+
+MENU(buzzerSettingMenu, "Buzzer[STUB]", showEvent, anyEvent, noStyle,
+     SUBMENU(buzzerOnOff),
+     OP("DoNotDisturb", action1, anyEvent),
+     EXIT("<Back"));
+// --------
+// ------------ LED
+MENU(ledSettingMenu, "LED[STUB]", showEvent, anyEvent, noStyle,
+     OP("On/Off", action1, anyEvent),
+     OP("DoNotDisturb", action1, anyEvent),
+     EXIT("<Back"));
+// --------
+// --------------- Network
+MENU(networkMenu, "Network[STUB]", showEvent, anyEvent, noStyle,
+     OP("WiFi", action1, anyEvent),
+     OP("Telegram", action1, anyEvent),
+     OP("MQTT", action1, anyEvent),
+     EXIT("<Back"));
+// --------- Version & info
+MENU(versionInfoMenu, "Version & info[STUB]", showEvent, anyEvent, noStyle,
+     OP(APP_VERSION, action1, anyEvent),
+     EXIT("<Back"));
+// ---------------
+// ---------------
+
+
 int brightnessValue = 15; // Default LED brightness value
 result adjustBrightness()
 {
@@ -162,28 +251,43 @@ public:
     }
 };
 
-MENU(subMenu, "Sub-Menu", showEvent, anyEvent, noStyle, OP("Sub1", showEvent, anyEvent), OP("Sub2", showEvent, anyEvent), OP("Sub3", showEvent, anyEvent), altOP(altPrompt, "", showEvent, anyEvent), EXIT("<Back"));
+// MENU(subMenu, "Sub-Menu", showEvent, anyEvent, noStyle, OP("Sub1", showEvent, anyEvent), OP("Sub2", showEvent, anyEvent), OP("Sub3", showEvent, anyEvent), altOP(altPrompt, "", showEvent, anyEvent), EXIT("<Back"));
 
 
-MENU(waterTanksMenu, "Water tanks", showEvent, anyEvent, noStyle, 
-    FIELD(appConfig.wTank1.capacity, "Capacity", "ml", 10, 9999, 10, 1, doNothing, enterEvent, wrapStyle), EXIT("<Back"));
-
-
-MENU(mainMenu, "Main menu", doNothing, noEvent, wrapStyle, OP("Op1", action1, anyEvent), OP("Op2", action2, enterEvent)
-     /* FIELD Parameters :
-
-        Action Name(function name), Action Heading, Action Heading Unit,
-        range_lowest, range_highest, range_increment_step,
-        range_decrement_step
-     */
-     ,
-     FIELD(brightnessValue, "Brightness", "%", 0, 100, 5, 5, adjustBrightness, enterEvent, wrapStyle), SUBMENU(subMenu), SUBMENU(setLed),
-     SUBMENU(waterTanksMenu),
-      OP("LED On", internalLedOn, enterEvent) // will turn on built-in LED
+     /*SUBMENU(subMenu),
+      SUBMENU(setLed),
+     
+     OP("LED On", internalLedOn, enterEvent) // will turn on built-in LED
      ,
      OP("LED Off", internalLedOff, enterEvent) // will turn off built-in LED
+     */
+
+
+MENU(mainMenu, "Main menu", doNothing, noEvent, wrapStyle, 
+     SUBMENU(waterTanksMenu),
+     SUBMENU(dateTimeMenu),
+     SUBMENU(dispensersMenu),
+     SUBMENU(notificationMenu),
+     SUBMENU(buzzerSettingMenu),
+     SUBMENU(ledSettingMenu),
+     SUBMENU(networkMenu),
+     SUBMENU(versionInfoMenu),
+      EXIT("<Back"));
+
+/*
+
+MENU(mainMenu, "Main menu", doNothing, noEvent, wrapStyle, 
+     SUBMENU(waterTanksMenu),
+     SUBMENU(dateTimeMenu),
+
+     OP("Op1", action1, anyEvent), OP("Op2", action2, enterEvent),
+     FIELD(brightnessValue, "Brightness", "%", 0, 100, 5, 5, adjustBrightness, enterEvent, wrapStyle), 
+
      ,
-     SUBMENU(selMenu), SUBMENU(chooseMenu), OP("Alert test", doAlert, enterEvent), EXIT("<Back"));
+     SUBMENU(selMenu), SUBMENU(chooseMenu), 
+     OP("Alert test", doAlert, enterEvent), EXIT("<Back"));
+
+*/     
 
 // describing a menu output device without macros
 // define at least one panel for menu output

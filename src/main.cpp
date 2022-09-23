@@ -43,10 +43,12 @@ DHT sensorTH = DHT(DHTPin, DHTTYPE);
 
 
 
-DisplayDevice displayDevice;
+
 BuzzerDevice buzzerDevice;
 GlobalTime globalTime;
 
+WaterTank waterTank1("B1");
+WaterTank waterTank2("B2");
 Pump pump1(MOTORA_PWM_PIN, MOTORA_DIR0_PIN, MOTORA_DIR1_PIN);
 Pump pump2(MOTORB_PWM_PIN, MOTORB_DIR0_PIN, MOTORB_DIR1_PIN);
 extern void providePump1(unsigned long ml);

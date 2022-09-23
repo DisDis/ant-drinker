@@ -1,5 +1,5 @@
-#include "display.h"
 #include <Arduino.h>
+#include "display.h"
 #include "icons.h"
 #include "splash.h"
 #include "state.h"
@@ -10,6 +10,8 @@
 #define INVERTDISPLAY 0xA7
 
 Adafruit_SSD1306 display = Adafruit_SSD1306(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
+
+DisplayDevice displayDevice;
 
 DisplayDevice::DisplayDevice()
 {

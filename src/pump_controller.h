@@ -21,7 +21,7 @@ class PumpController
 {
 private:
     const char *_id;
-    bool isEnabled = false;
+    
     Pump* pump;
     // Как часто? (1мин .. 1день ... 1 неделя .. 2х недель)
     DateTimeTimer tmrAction = DateTimeTimer();
@@ -29,14 +29,9 @@ private:
     SimpleTimer tmrWork = SimpleTimer();
     // Калибровка
     TimerMs tmrCalibration = TimerMs(100 * 1000, 0, 1);
-    // Скорость мл жидкости в миллисекунду
-    float speedMlPerMs = 1.0;
-    // 0..255 [1-100%]
-    unsigned char power = 255;
-    // Left/Right
-    bool isInverted = false;
-    // Сколько нужно мл за 1 раз
-    float mlAtTime = 10.0;
+   
+    
+    
     // Сколько мл получилось при калибровке(100 секунд)
     float calibration100SecMl = 0.0;
     PumpMode mode = NotCalibratedMode;
@@ -48,6 +43,17 @@ private:
     ON_FINISH_WORK_CALLBACK finishWorkCallback = nullptr;
 
 public:
+    bool isEnabled = false;
+    // Сколько нужно мл за 1 раз
+    float mlAtTime = 10.0;
+    // Left/Right
+    bool isInverted = false;
+
+     // Скорость мл жидкости в миллисекунду
+    float speedMlPerMs = 1.0;
+    // 0..255 [1-100%]
+    unsigned char power = 255;
+
     PumpController(const char *id, Pump* pump, ON_FINISH_WORK_CALLBACK finishWorkCallback);
     PumpMode calculateMode();
     void execute();
