@@ -8,8 +8,10 @@
 #define DISPLAYON 0xAF
 #define NORMALDISPLAY 0xA6
 #define INVERTDISPLAY 0xA7
+#define OLED_RESET     -1 // Reset pin # (or -1 if sharing Arduino reset pin)
 
-Adafruit_SSD1306 display = Adafruit_SSD1306(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
+
+Adafruit_SSD1306 display = Adafruit_SSD1306(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
 DisplayDevice displayDevice;
 
@@ -20,6 +22,9 @@ DisplayDevice::DisplayDevice()
 void DisplayDevice::init()
 {
     Serial.print("  display...");
+    // pinMode(SDA, PULLUP);
+    // pinMode(SCL, PULLUP);
+    Wire.begin(SDA, SCL, 400000);
     if (!display.begin(SSD1306_SWITCHCAPVCC, 0x3C))
     {
         Serial.println(F("SSD1306 allocation failed"));
@@ -39,7 +44,7 @@ void DisplayDevice::showSplashScreen()
     Serial.print("  Splash...");
     // https://github.com/ThingPulse/esp8266-oled-ssd1306/
     display.drawBitmap((SCREEN_WIDTH - Splash_Logo_width) / 2, 0, splash_Logo_bits, Splash_Logo_width, Splash_Logo_height, 1);
-    display.setCursor((SCREEN_WIDTH - Splash_Logo_width) / 2 + Splash_Logo_width, 0);
+    display.setCursor((SCREEN_WIDTH - Splash_Logo_width) / 2 + Splash_Logo_width, Splash_Logo_height);
     display.println(APP_VERSION);
     display.display();
     Serial.println("OK");
@@ -53,6 +58,7 @@ void DisplayDevice::detectTimeOff()
         {
             applicationState.isDisplayOn = false;
             display.clearDisplay();
+            Serial.println("Display turns off");
             turnOff();
             applicationState.currentPage = idlePage;
         }
@@ -62,6 +68,7 @@ void DisplayDevice::detectTimeOff()
         if (currentMillis - applicationState.lastActionMillis < automaticScreenOffTimeMs)
         {
             applicationState.isDisplayOn = true;
+            Serial.println("Display turns on");
             turnOn();
             applicationState.currentPage = mainPage;
         }

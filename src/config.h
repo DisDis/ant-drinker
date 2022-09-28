@@ -9,6 +9,7 @@
 #include "pump_controller.h"
 #include "buzzer.h"
 #include "water_tank.h"
+#include "led_device.h"
 
 
 extern Preferences preferences;
@@ -22,6 +23,7 @@ extern Pump pump1;
 extern Pump pump2;
 extern PumpController pumpController1;
 extern PumpController pumpController2;
+extern LEDDevice ledDevice;
 
 #define SCREEN_WIDTH 128 // OLED display width, in pixels
 #define SCREEN_HEIGHT 64 // OLED display height, in pixels
@@ -29,7 +31,7 @@ extern PumpController pumpController2;
 #define RO_MODE true
 #define RW_MODE false
 
-#define APP_VERSION "v0.3"
+#define APP_VERSION "v0.4"
 
 #define wifiSSIDKey "ssid" 
 #define wifiPassKey "pass"

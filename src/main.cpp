@@ -5,12 +5,13 @@
   Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files.
   The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 *********/
-
+/// TODO: Issue - I2C - Pull-Up resistor 2.4kOm (21,21 pins)
 #include <Arduino.h>
 #include <WiFi.h>
 #include <ESPAsyncWebServer.h>
 #include <AsyncTCP.h>
 #include "SPIFFS.h"
+#include "display.h"
 #include <AsyncElegantOTA.h>
 #include <Wire.h>
 #include "Adafruit_Sensor.h"
@@ -24,13 +25,13 @@
 #include "splash.h"
 #include "config.h"
 #include "TimerMs.h"
-#include "display.h"
 #include "menu_local.h"
 #include "state.h"
 #include "pump.h"
 #include "pump_controller.h"
 #include "buzzer.h"
 #include "global_time.h"
+#include "led_device.h"
 
 #define SEPARATE_LINE "-------------------------------"
 
@@ -41,11 +42,9 @@ AppState applicationState;
 // DHT22/AM2302
 DHT sensorTH = DHT(DHTPin, DHTTYPE);
 
-
-
-
 BuzzerDevice buzzerDevice;
 GlobalTime globalTime;
+LEDDevice ledDevice;
 
 WaterTank waterTank1("B1");
 WaterTank waterTank2("B2");
@@ -114,13 +113,6 @@ void initOTA()
   Serial.println("OK");
 }
 
-void initLED()
-{
-  Serial.print("  LED...");
-  pinMode(LED_PIN, OUTPUT);
-  digitalWrite(LED_PIN, LOW);
-  Serial.println("OK");
-}
 void initPumps()
 {
   Serial.print("  Pumps...");
@@ -157,15 +149,14 @@ void setup()
   initButtons();
   initPumps();
   initSensors();
-  initLED();
+  ledDevice.init();
   buzzerDevice.init();
   menuSetup();
 
   Serial.println("System is initialized");
   Serial.println(SEPARATE_LINE);
   Serial.println();
-  delay(1000);
-  display.clearDisplay();
+  // display.clearDisplay();
 }
 
 unsigned long previousMillis = 0;
@@ -175,8 +166,20 @@ unsigned long currentMillis = millis();
 char output[80];
 struct tm timeinfo;
 time_t now;
+
+TimerMs _mainPageTimer(37, 1, 0);
+
 void loopMainPage()
 {
+  if (applicationState.buttonClick)
+  {
+    applicationState.currentPage = menuPage;
+  }
+  if (!_mainPageTimer.tick() || !applicationState.displayChanged)
+  {
+    return;
+  }
+  applicationState.displayChanged = false;
   display.clearDisplay();
   display.setTextSize(1);
   display.setTextColor(WHITE);
@@ -191,10 +194,6 @@ void loopMainPage()
   display.println(output);
   display.drawBitmap(64, 0, splash_Logo_bits, Splash_Logo_width, Splash_Logo_height, 1);
   display.display();
-  if (applicationState.buttonClick)
-  {
-    applicationState.currentPage = menuPage;
-  }
 }
 
 void loopMenuPage()
@@ -259,11 +258,12 @@ void pollSensors()
     applicationState.currentTemperature = sensorTH.readTemperature();
     applicationState.currentHumidity = sensorTH.readHumidity();
     saveTHDateToLog();
-    // Serial.print("T: ");
-    // Serial.printf("%.1f", state.currentTemperature);
-    // Serial.print("H: ");
-    // Serial.printf("%.1f", state.currentHumidity);
-    // Serial.println();
+    Serial.print("T: ");
+    Serial.printf("%.1f", applicationState.currentTemperature);
+    Serial.print("H: ");
+    Serial.printf("%.1f", applicationState.currentHumidity);
+    Serial.println();
+    applicationState.displayChanged = true;
   }
 }
 
@@ -299,7 +299,7 @@ void pollButtons()
     lastStateL = currentState;
 
     currentState = digitalRead(ButtonRightPin);
-    applicationState.buttonRight = lastStateL == HIGH && currentState == LOW;
+    applicationState.buttonRight = lastStateR == HIGH && currentState == LOW;
     if (applicationState.buttonRight)
     {
       Serial.println("Right");
@@ -308,7 +308,7 @@ void pollButtons()
     lastStateR = currentState;
 
     currentState = digitalRead(ButtonUpPin);
-    applicationState.buttonUp = lastStateL == HIGH && currentState == LOW;
+    applicationState.buttonUp = lastStateU == HIGH && currentState == LOW;
     if (applicationState.buttonUp)
     {
       Serial.println("Up");
@@ -317,7 +317,7 @@ void pollButtons()
     lastStateU = currentState;
 
     currentState = digitalRead(ButtonDownPin);
-    applicationState.buttonDown = lastStateL == HIGH && currentState == LOW;
+    applicationState.buttonDown = lastStateD == HIGH && currentState == LOW;
     if (applicationState.buttonDown)
     {
       Serial.println("Down");

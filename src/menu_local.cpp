@@ -25,14 +25,17 @@
 #include <menu.h>
 #include <menuIO/adafruitGfxOut.h>
 #include <menuIO/serialOut.h>
-#include <menuIO/keyIn.h>
+//#include <menuIO/keyIn.h>
+#include <menuIO/altKeyIn.h>
 #include "state.h"
 #include "i18n/en.h"
 //#include <menuIO/chainStream.h>
 using namespace Menu;
 
 // https://github.com/neu-rah/ArduinoMenu/blob/master/examples/targetSel/targetSel/targetSel.ino
-
+// define menu colors --------------------------------------------------------
+//each color is in the format:
+//  {{disabled normal,disabled selected},{enabled normal,enabled selected, enabled editing}}
 const colorDef<uint16_t> colors[6] MEMMODE = {
     {{WHITE, BLACK}, {WHITE, BLACK, BLACK}}, // bgColor
     {{BLACK, WHITE}, {BLACK, WHITE, WHITE}}, // fgColor
@@ -154,24 +157,50 @@ MENU(dateTimeMenu, "Date/Time[STUB]", showEvent, anyEvent, noStyle,
      EXIT("<Back"));
 // --------
 
+result pump1Stop(eventMask e)
+{
+    pumpController1.stopImmediate();
+    return proceed;
+}
+result pump1Start(eventMask e)
+{
+    pumpController1.startImmediate();
+    return proceed;
+}
+result pump1EmergencyStop(eventMask e)
+{
+    pumpController1.emergencyStop();
+    return proceed;
+}
+
+result pump1calibration(eventMask e)
+{
+    pumpController1.startCalibration();
+    return proceed;
+}
+
+
 // ------------ Dispensers
 TOGGLE(pumpController1.isEnabled,pumpController1OnOff, "Enabled: ", doNothing, noEvent, wrapStyle, VALUE("Off", false, doNothing, noEvent), VALUE("On", true, doNothing, noEvent));
 TOGGLE(pumpController1.isInverted,pumpController1Invert, "Dir: ", doNothing, noEvent, wrapStyle, VALUE("Right", false, doNothing, noEvent), VALUE("Left", false, doNothing, noEvent));
 
 MENU(pumpController1CalibrationMenu, "Calibration[STUB]", showEvent, anyEvent, noStyle,
-     OP("O1", action1, anyEvent),
-     OP("O2", action1, anyEvent),
-     OP("O3", action1, anyEvent),
+     OP("Start 100 sec calibration", pump1calibration, anyEvent),
+     FIELD(pumpController1.power, "Power", "%", 1, 255, 10, 1, doNothing, enterEvent, wrapStyle),
+     OP("Stop pump", pump1Stop, anyEvent),
+     OP("Start pump", pump1Start, anyEvent),
+     OP("Amount water per 100sec", doNothing, anyEvent),
+     FIELD(pumpController1.speedMlPerMs, "Speed", "Ml/Sec", 1, 255, 1, 1, doNothing, enterEvent, wrapStyle),
      EXIT("<Back"));
 
-MENU(pumpController1Menu, "Pump1[STUB]", showEvent, anyEvent, noStyle,
+MENU(pumpController1Menu, "Pump1", showEvent, anyEvent, noStyle,
      SUBMENU(pumpController1OnOff),
      OP("Mode: Ready", action1, anyEvent),
      FIELD(pumpController1.mlAtTime, "Count", "ml", 10, 99999, 10, 1, doNothing, enterEvent, wrapStyle),
      OP("Interval: 5 hour", action1, anyEvent),
-     OP("Stop pump", action1, anyEvent),
-     OP("Start pump", action1, anyEvent),
-     OP("Emergency Stop", action1, anyEvent),
+     OP("Stop pump", pump1Stop, anyEvent),
+     OP("Start pump", pump1Start, anyEvent),
+     OP("Emergency Stop", pump1EmergencyStop, anyEvent),
      SUBMENU(pumpController1CalibrationMenu),
      SUBMENU(pumpController1Invert),
      EXIT("<Back"));
@@ -189,16 +218,15 @@ MENU(notificationMenu, "Notification[STUB]", showEvent, anyEvent, noStyle,
 // --------
 // ------------ Buzzer
 TOGGLE(buzzerDevice.enabled, buzzerOnOff, "Enabled: ", doNothing, noEvent, wrapStyle, VALUE("Off", false, doNothing, noEvent), VALUE("On", true, doNothing, noEvent));
-
-MENU(buzzerSettingMenu, "Buzzer[STUB]", showEvent, anyEvent, noStyle,
+MENU(buzzerSettingMenu, "Buzzer", showEvent, anyEvent, noStyle,
      SUBMENU(buzzerOnOff),
      OP("DoNotDisturb", action1, anyEvent),
      EXIT("<Back"));
 // --------
 // ------------ LED
-MENU(ledSettingMenu, "LED[STUB]", showEvent, anyEvent, noStyle,
-     OP("On/Off", action1, anyEvent),
-     OP("DoNotDisturb", action1, anyEvent),
+TOGGLE(ledDevice.enabled, ledOnOff, "Enabled: ", doNothing, noEvent, wrapStyle, VALUE("Off", false, doNothing, noEvent), VALUE("On", true, doNothing, noEvent));
+MENU(ledSettingMenu, "LED", showEvent, anyEvent, noStyle,
+     SUBMENU(ledOnOff),
      EXIT("<Back"));
 // --------
 // --------------- Network
@@ -318,10 +346,11 @@ keyIn<TOTAL_NAV_BUTTONS> joystickBtns(joystickBtn_map); // the input driver
 #else
 // build a map of keys to menu commands
 keyMap joystickBtn_map[] = {
-    {BTN_SEL, defaultNavCodes[enterCmd].ch},
-    {BTN_UP, defaultNavCodes[upCmd].ch},
-    {BTN_DOWN, defaultNavCodes[downCmd].ch},
-    {BTN_ESC, defaultNavCodes[escCmd].ch},
+    {BTN_SEL, defaultNavCodes[enterCmd].ch, INPUT_PULLDOWN},
+    {BTN_UP, defaultNavCodes[upCmd].ch, INPUT_PULLDOWN},
+    {BTN_DOWN, defaultNavCodes[downCmd].ch, INPUT_PULLDOWN},
+    {ButtonLeftPin, defaultNavCodes[leftCmd].ch, INPUT_PULLDOWN},
+    {ButtonRightPin, defaultNavCodes[rightCmd].ch, INPUT_PULLDOWN},
 };
 keyIn<TOTAL_NAV_BUTTONS> joystickBtns(joystickBtn_map); // the input driver
 #endif
@@ -383,7 +412,6 @@ void menuSetup()
 
 void menuLoop()
 {
-    //    nav.poll();
     nav.doInput();
     if (nav.changed(0))
     { // only draw if changed

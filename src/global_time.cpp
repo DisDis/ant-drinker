@@ -29,7 +29,8 @@ void GlobalTime::init()
     }
 
     Serial.println("   NTP ");
-    configTime(0, 3600 * timeZone /*+3 GMT*/, ntpServer1, ntpServer2, ntpServer3);
+    ///FIXME: Enable!!
+    //configTime(0, 3600 * timeZone /*+3 GMT*/, ntpServer1, ntpServer2, ntpServer3);
 
     if (!getLocalTime(&timeinfo))
     {
