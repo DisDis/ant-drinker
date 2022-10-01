@@ -1,5 +1,6 @@
 #include <Arduino.h>
 #include "global_time.h"
+#include "common.h"
 #include "config.h"
 
 // NTP
@@ -23,7 +24,7 @@ void GlobalTime::init()
     }
     else
     {
-        strftime(output, 80, DATATIME_FORMAT, &timeinfo);
+        strftime(output, 80, DATETIME_FORMAT, &timeinfo);
         Serial.print(output);
         Serial.println(" ... OK");
     }
@@ -37,7 +38,7 @@ void GlobalTime::init()
         Serial.println(" Error: Could not obtain time info");
         return;
     }
-    strftime(output, 80, DATATIME_FORMAT, &timeinfo);
+    strftime(output, 80, DATETIME_FORMAT, &timeinfo);
     Serial.print(output);
     Serial.println(" ... OK");
 }

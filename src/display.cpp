@@ -3,6 +3,7 @@
 #include "icons.h"
 #include "splash.h"
 #include "state.h"
+#include "common.h"
 
 #define DISPLAYOFF 0xAE
 #define DISPLAYON 0xAF

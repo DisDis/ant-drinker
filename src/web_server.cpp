@@ -4,6 +4,7 @@
 #include <ESPAsyncWebServer.h>
 #include <AsyncTCP.h>
 #include "config.h"
+#include "common.h"
 
 // Create AsyncWebServer object on port 80
 AsyncWebServer server(80);

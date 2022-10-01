@@ -1,5 +1,6 @@
 #include "led_device.h"
 #include "config.h"
+#include <Arduino.h>
 
 LEDDevice::LEDDevice()
 {

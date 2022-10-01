@@ -5,6 +5,7 @@
 #include "display.h"
 #include <menu.h>
 #include <menuIO/adafruitGfxOut.h>
+#include "SSD1306Out.h"
 #include <menuIO/serialOut.h>
 #include <menuIO/serialIO.h>
 // #include <menuIO/u8g2Out.h>
@@ -12,6 +13,7 @@
 // #include <menuIO/altKeyIn.h>
 #include "state.h"
 #include "i18n/en.h"
+#include "common.h"
 //#include <menuIO/chainStream.h>
 using namespace Menu;
 
@@ -28,10 +30,13 @@ const colorDef<uint16_t> colors[6] MEMMODE = {
     {{BLACK, WHITE}, {WHITE, BLACK, BLACK}}, // titleColor
 };
 
-#define gfxWidth 128
-#define gfxHeight 64
+#define gfxWidth 127
+#define gfxHeight 63
 #define fontX 7
-#define fontY 10
+#define fontY 9
+
+// #define fontW 7
+// #define fontH 8
 
 #define MAX_DEPTH 4
 #define MENU_ASYNC
@@ -112,9 +117,40 @@ MENU(waterTanksMenu, "Water tanks", showEvent, anyEvent, wrapStyle,
 // ---------
 
 // ------- Date/Time
+
+char outpuDateTime[80];
+struct tm timeinfoMenu;
+time_t nowMenu;
+class DatePrompt : public prompt
+{
+public:
+    DatePrompt(constMEM promptShadow &p) : prompt(p) {}
+    Used printTo(navRoot &root, bool sel, menuOut &out, idx_t idx, idx_t len, idx_t) override
+    {
+         time(&nowMenu);
+  localtime_r(&nowMenu, &timeinfoMenu);
+  strftime(outpuDateTime, 80, MENU_DATE_FORMAT, &timeinfoMenu);
+        return out.printRaw(F(outpuDateTime), len);
+    }
+};
+
+class TimePrompt : public prompt
+{
+public:
+    TimePrompt(constMEM promptShadow &p) : prompt(p) {}
+    Used printTo(navRoot &root, bool sel, menuOut &out, idx_t idx, idx_t len, idx_t) override
+    {
+         time(&nowMenu);
+  localtime_r(&nowMenu, &timeinfoMenu);
+  strftime(outpuDateTime, 80, MENU_TIME_FORMAT, &timeinfoMenu);
+        return out.printRaw(F(outpuDateTime), len);
+    }
+};
+
+
 MENU(dateTimeMenu, "Date/Time", showEvent, anyEvent, wrapStyle,
-     OP("Data: 24.09.2022", action1, anyEvent),
-     OP("Time: 10:42", action1, anyEvent),
+     altOP(DatePrompt, "", doNothing, anyEvent),
+     altOP(TimePrompt, "", doNothing, anyEvent),
      OP("Time zone: +3", action1, anyEvent),
      EXIT("<Back"));
 // --------
@@ -143,10 +179,23 @@ result pump1calibration(eventMask e)
 
 
 // ------------ Dispensers
+
+class PumpModePrompt : public prompt
+{
+public:
+    char output[80];
+    PumpModePrompt(constMEM promptShadow &p) : prompt(p) {}
+    Used printTo(navRoot &root, bool sel, menuOut &out, idx_t idx, idx_t len, idx_t) override
+    {
+        snprintf(output, 80, "Mode: %s", "TEST");
+        return out.printRaw(F(output), len);
+    }
+};
+
 TOGGLE(pumpController1.isEnabled,pumpController1OnOff, "Enabled: ", doNothing, noEvent, wrapStyle, VALUE("Off", false, doNothing, noEvent), VALUE("On", true, doNothing, noEvent));
 TOGGLE(pumpController1.isInverted,pumpController1Invert, "Dir: ", doNothing, noEvent, wrapStyle, VALUE("Right", false, doNothing, noEvent), VALUE("Left", false, doNothing, noEvent));
 
-MENU(pumpController1CalibrationMenu, "Calibration[STUB]", showEvent, anyEvent, wrapStyle,
+MENU(pumpController1CalibrationMenu, "Calibration", showEvent, anyEvent, wrapStyle,
      OP("Start 100 sec calibration", pump1calibration, anyEvent),
      FIELD(pumpController1.power, "Power", "%", 1, 255, 10, 1, doNothing, enterEvent, wrapStyle),
      OP("Stop pump", pump1Stop, anyEvent),
@@ -157,8 +206,8 @@ MENU(pumpController1CalibrationMenu, "Calibration[STUB]", showEvent, anyEvent, w
 
 MENU(pumpController1Menu, "Pump1", showEvent, anyEvent, wrapStyle,
      SUBMENU(pumpController1OnOff),
-     OP("Mode: Ready", action1, anyEvent),
-     FIELD(pumpController1.mlAtTime, "Count", "ml", 10, 99999, 10, 1, doNothing, enterEvent, wrapStyle),
+     altOP(PumpModePrompt, "", doNothing, anyEvent),
+     FIELD(pumpController1.mlAtTime, "Count", "ml", 10, 999, 10, 1, doNothing, enterEvent, wrapStyle),
      OP("Interval: 5 hour", action1, anyEvent),
      OP("Stop pump", pump1Stop, anyEvent),
      OP("Start pump", pump1Start, anyEvent),
@@ -229,19 +278,10 @@ SELECT(selTest, selMenu, "Select", doNothing, noEvent, wrapStyle, VALUE("Zero", 
 int chooseTest = -1;
 CHOOSE(chooseTest, chooseMenu, "Choose", doNothing, noEvent, wrapStyle, VALUE("First", 1, doNothing, noEvent), VALUE("Second", 2, doNothing, noEvent), VALUE("Third", 3, doNothing, noEvent), VALUE("Last", -1, doNothing, noEvent));
 
-// customizing a prompt look!
-// by extending the prompt class
-class altPrompt : public prompt
-{
-public:
-    altPrompt(constMEM promptShadow &p) : prompt(p) {}
-    Used printTo(navRoot &root, bool sel, menuOut &out, idx_t idx, idx_t len, idx_t) override
-    {
-        return out.printRaw(F("special prompt!"), len);
-    }
-};
 
-// MENU(subMenu, "Sub-Menu", showEvent, anyEvent, wrapStyle, OP("Sub1", showEvent, anyEvent), OP("Sub2", showEvent, anyEvent), OP("Sub3", showEvent, anyEvent), altOP(altPrompt, "", showEvent, anyEvent), EXIT("<Back"));
+
+// MENU(subMenu, "Sub-Menu", showEvent, anyEvent, wrapStyle, OP("Sub1", showEvent, anyEvent), OP("Sub2", showEvent, anyEvent), 
+//OP("Sub3", showEvent, anyEvent), altOP(altPrompt, "", showEvent, anyEvent), EXIT("<Back"));
 
 
      /*SUBMENU(subMenu),
@@ -254,6 +294,7 @@ public:
 
 
 MENU(mainMenu, "Main menu", doNothing, noEvent, wrapStyle, 
+     
      SUBMENU(waterTanksMenu),
      SUBMENU(dateTimeMenu),
      SUBMENU(dispensersMenu),
@@ -279,22 +320,21 @@ MENU(mainMenu, "Main menu", doNothing, noEvent, wrapStyle,
 
 */     
 
-// describing a menu output device without macros
-// define at least one panel for menu output
-// const panel panels[] MEMMODE = {{0, 0, 128 / fontW, 64 / fontH}};
-// navNode *nodes[sizeof(panels) / sizeof(panel)]; // navNodes to store navigation status
-// panelsList pList(panels, nodes, 1);             // a list of panels and nodes
-// idx_t tops[MAX_DEPTH] = {0, 0};                 // store cursor positions for each level
 
-// #ifdef LARGE_FONT
-// SSD1306AsciiOut outOLED(&display, tops, pList, 8, 2); //oled output device menu driver
 
-// #else
-// SSD1306AsciiOut outOLED(&oled, tops, pList, 5, 1); //oled output device menu driver
-// #endif
+//define output device
+idx_t serialTops[MAX_DEPTH] = {0};
+serialOut outSerial(Serial, serialTops);
 
-// menuOut* constMEM outputs[]  MEMMODE  = {&display}; //list of output devices
-// outputsList out(outputs, 1); //outputs list
+//describing a menu output device without macros
+//define at least one panel for menu output
+// const panel panels[] MEMMODE = {{0, 0, gfxWidth / fontX, gfxHeight / fontY}};
+// navNode* nodes[sizeof(panels) / sizeof(panel)]; //navNodes to store navigation status
+// panelsList pList(panels, nodes, 1); //a list of panels and nodes
+// idx_t tops[MAX_DEPTH] = {0, 0}; //store cursor positions for each level
+// SSD1306Out outOLED(&display, tops, pList, fontX, fontY+1); //oled output device menu driver
+// menuOut* constMEM outputs[] MEMMODE = {&outOLED, &outSerial}; //list of output devices
+// outputsList out(outputs, sizeof(outputs) / sizeof(menuOut*)); //outputs list
 
 
 // build a map of keys to menu commands
@@ -309,9 +349,9 @@ MENU(mainMenu, "Main menu", doNothing, noEvent, wrapStyle,
 
 //{0,0,14,8},{14,0,14,8}
 //{0, 0, gfxWidth / fontX, gfxHeight / fontY}
-MENU_OUTPUTS(out, MAX_DEPTH, ADAGFX_OUT(display, colors, fontX, fontY, {0, 0, gfxWidth / fontX, gfxHeight / fontY}), SERIAL_OUT(Serial));
+MENU_OUTPUTS(out, MAX_DEPTH, ADAGFX_OUT(display, colors, fontX, fontY, {0, 0, gfxWidth / fontX, gfxHeight / (fontY+1)}), SERIAL_OUT(Serial));
 serialIn serial(Serial);
-NAVROOT(nav, mainMenu, MAX_DEPTH, serial/*joystickBtns*/, out);
+NAVROOT(nav, mainMenu, MAX_DEPTH, serial, out);
 
 result alert(menuOut &o, idleEvent e)
 {
@@ -380,8 +420,8 @@ void menuLoop()
      
     if (nav.changed(0))
     { // only draw if changed
-        display.clearDisplay();
-        display.setCursor(0,0);
+        // display.clearDisplay();
+        // display.setCursor(0,0);
         nav.doOutput();
         display.display();
     }

@@ -1,29 +1,12 @@
 #ifndef _Config_h
 #define _Config_h
 
-#include <Preferences.h>
-#include <Adafruit_SSD1306.h>
-#include "pump_controller.h"
-#include "global_time.h"
-#include "pump.h"
-#include "pump_controller.h"
-#include "buzzer.h"
-#include "water_tank.h"
-#include "led_device.h"
+#define SENSOR_T_H_DHT
+//#define SENSOR_T_H_AM2320
+#define DHTTYPE DHT22
 
-
-extern Preferences preferences;
-extern unsigned long currentMillis;
-extern BuzzerDevice buzzerDevice;
-extern GlobalTime globalTime;
-
-extern WaterTank waterTank1;
-extern WaterTank waterTank2;
-extern Pump pump1;
-extern Pump pump2;
-extern PumpController pumpController1;
-extern PumpController pumpController2;
-extern LEDDevice ledDevice;
+#define SENSOR_T_H_PIN 26
+#define SENSOR_LOW_WATER 15
 
 #define SCREEN_WIDTH 128 // OLED display width, in pixels
 #define SCREEN_HEIGHT 64 // OLED display height, in pixels
@@ -31,7 +14,7 @@ extern LEDDevice ledDevice;
 #define RO_MODE true
 #define RW_MODE false
 
-#define APP_VERSION "v0.4"
+#define APP_VERSION "v0.5"
 
 #define wifiSSIDKey "ssid" 
 #define wifiPassKey "pass"
@@ -41,9 +24,7 @@ extern LEDDevice ledDevice;
 
 #define globalTimeKey "dt"
 
-//#define SENSOR_TEM_HYM 
-#define DHTTYPE DHT22
-#define DHTPin 26
+
 
 #define ButtonClickPin 34
 #define ButtonLeftPin 35
@@ -63,7 +44,9 @@ extern LEDDevice ledDevice;
 
 #define BUZZER_PIN 24
 
-#define DATATIME_FORMAT "%d-%m-%y, %H:%M:%S"
+#define DATETIME_FORMAT "%d-%m-%y, %H:%M:%S"
+#define MENU_DATE_FORMAT "Date: %d-%m-%y"
+#define MENU_TIME_FORMAT "Time: %H:%M:%S"
 
 // Set LED GPIO
 #define LED_PIN 13
@@ -71,14 +54,6 @@ extern LEDDevice ledDevice;
 
 
 
-class Config{
-    public:
-      Config();
-      void load(PumpController* pc);
-    private:
 
-};
-
-extern Config appConfig;
 
 #endif

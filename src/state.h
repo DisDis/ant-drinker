@@ -17,12 +17,8 @@ class AppState
 public:
   bool isDisplayOn = true;
   unsigned long lastActionMillis = millis();
-  unsigned long lastTHUpdate = 0;
-  unsigned long lastWaterLevelUpdate = 0;
   unsigned long lastSaveTHData = 0;
   unsigned long lastBuzzerOn = 0;
-  float currentTemperature = 0.0;
-  float currentHumidity = 0.0;
   ScreenType currentPage = mainPage;
   bool buttonClick = false;
   bool buttonLeft = false;

@@ -2,6 +2,7 @@
 
 #include <WiFi.h>
 #include <config.h>
+#include "common.h"
 
 void initAPWiFi()
 {

@@ -14,11 +14,11 @@
 #include "display.h"
 #include <AsyncElegantOTA.h>
 #include <Wire.h>
-#include "Adafruit_Sensor.h"
-#include "Adafruit_AM2320.h"
+
+
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
-#include "DHT.h"
+
 #include <Preferences.h>
 #include "wificfg.h"
 #include "web_server.h"
@@ -32,21 +32,22 @@
 #include "buzzer.h"
 #include "global_time.h"
 #include "led_device.h"
+#include "common.h"
 
 #define SEPARATE_LINE "-------------------------------"
 
 //#define SKIP_INIT_ALL
 
+extern void saveTHDateToLog();
+
 AppState applicationState;
 
-// AM2320
-// Adafruit_AM2320 sensorTH = Adafruit_AM2320();
-// DHT22/AM2302
-DHT sensorTH = DHT(DHTPin, DHTTYPE);
+
 
 BuzzerDevice buzzerDevice;
 GlobalTime globalTime;
 LEDDevice ledDevice;
+SensorDevices sensorDevices(saveTHDateToLog);
 
 WaterTank waterTank1("B1");
 WaterTank waterTank2("B2");
@@ -78,22 +79,6 @@ void initSPIFFS()
     Serial.println("An error has occurred while mounting SPIFFS");
   }
   Serial.println("OK: SPIFFS mounted successfully");
-}
-
-void initSensors()
-{
-  Serial.println("  sensors:");
-  // Serial.print("    AM2320..");
-  // if (!sensorTH.begin())
-  // {
-  //   Serial.println(F("am2320 failed"));
-  // } else { Serial.println("OK");}
-
-  // DHT
-  Serial.print("    DHT...");
-  pinMode(DHTPin, INPUT);
-  sensorTH.begin();
-  Serial.println("OK");
 }
 
 void initButtons()
@@ -150,12 +135,12 @@ void setup()
   initOTA();
   server.begin();
   globalTime.init();
+  #endif
   initButtons();
   initPumps();
-  initSensors();
+  sensorDevices.init();
   ledDevice.init();
   buzzerDevice.init();
-#endif
   menuSetup();
 
   Serial.println("System is initialized");
@@ -182,13 +167,13 @@ void loopMainPage()
   display.setTextSize(1);
   display.setTextColor(WHITE);
   display.setCursor(0, 0);
-  display.printf("T:%.1f H:%.1f", applicationState.currentTemperature, applicationState.currentHumidity);
+  display.printf("T:%.1f H:%.1f", sensorDevices.currentTemperature, sensorDevices.currentHumidity);
   display.println();
   display.print("RRSI: ");
   display.println(WiFi.RSSI());
   time(&now);
   localtime_r(&now, &timeinfo);
-  strftime(output, 80, DATATIME_FORMAT, &timeinfo);
+  strftime(output, 80, DATETIME_FORMAT, &timeinfo);
   display.println(output);
   display.drawBitmap(64, 0, splash_Logo_bits, Splash_Logo_width, Splash_Logo_height, 1);
   display.display();
@@ -244,21 +229,6 @@ void saveTHDateToLog()
   }
 }
 
-void pollSensors()
-{
-  if (currentMillis - applicationState.lastTHUpdate > 2000)
-  {
-    applicationState.lastTHUpdate = currentMillis;
-    applicationState.currentTemperature = sensorTH.readTemperature();
-    applicationState.currentHumidity = sensorTH.readHumidity();
-    saveTHDateToLog();
-    // Serial.print("T: ");
-    // Serial.printf("%.1f", applicationState.currentTemperature);
-    // Serial.print("H: ");
-    // Serial.printf("%.1f", applicationState.currentHumidity);
-    // Serial.println();
-  }
-}
 
 // Variables will change:
 int lastStateC = LOW; // the previous state from the input pin
@@ -282,7 +252,7 @@ void pollButtons()
     applicationState.buttonClick = lastStateC == HIGH && currentState == LOW;
     if (applicationState.buttonClick)
     {
-      Serial.println("Click");
+      // Serial.println("Click");
       applicationState.lastActionMillis = currentMillis;
     }
     lastStateC = currentState;
@@ -291,7 +261,7 @@ void pollButtons()
     applicationState.buttonLeft = lastStateL == HIGH && currentState == LOW;
     if (applicationState.buttonLeft)
     {
-      Serial.println("Left");
+      // Serial.println("Left");
       applicationState.lastActionMillis = currentMillis;
     }
     lastStateL = currentState;
@@ -300,7 +270,7 @@ void pollButtons()
     applicationState.buttonRight = lastStateR == HIGH && currentState == LOW;
     if (applicationState.buttonRight)
     {
-      Serial.println("Right");
+      // Serial.println("Right");
       applicationState.lastActionMillis = currentMillis;
     }
     lastStateR = currentState;
@@ -309,7 +279,7 @@ void pollButtons()
     applicationState.buttonUp = lastStateU == HIGH && currentState == LOW;
     if (applicationState.buttonUp)
     {
-      Serial.println("Up");
+      // Serial.println("Up");
       applicationState.lastActionMillis = currentMillis;
     }
     lastStateU = currentState;
@@ -318,7 +288,7 @@ void pollButtons()
     applicationState.buttonDown = lastStateD == HIGH && currentState == LOW;
     if (applicationState.buttonDown)
     {
-      Serial.println("Down");
+      // Serial.println("Down");
       applicationState.lastActionMillis = currentMillis;
     }
     lastStateD = currentState;
@@ -332,6 +302,6 @@ void loop()
   displayDevice.detectTimeOff();
   buzzerDevice.loop();
   executeCurrentState();
-  pollSensors();
+  sensorDevices.poll();
   globalTime.loop();
 }
