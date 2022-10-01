@@ -25,7 +25,7 @@ PumpMode PumpController::calculateMode()
     return result;
 }
 
-PumpController::PumpController(const char *id, Pump* pump, ON_FINISH_WORK_CALLBACK finishWorkCallback)
+PumpController::PumpController(const char *id, Pump *pump, ON_FINISH_WORK_CALLBACK finishWorkCallback)
 {
     this->_id = id;
     this->pump = pump;
@@ -83,6 +83,7 @@ void PumpController::execute()
 
 void PumpController::stopImmediate()
 {
+    Serial.println("stopImmediate");
     _stopPump();
     tmrAction.restart();
     tmrWork.stop();
@@ -94,6 +95,7 @@ void PumpController::stopImmediate()
 }
 void PumpController::startImmediate()
 {
+    Serial.println("startImmediate");
     tmrAction.restart();
     mode = TurnOnMode;
     tmrWork.stop();
@@ -102,6 +104,7 @@ void PumpController::startImmediate()
 
 void PumpController::emergencyStop()
 {
+    Serial.println("emergencyStop");
     mode = NotCalibratedMode;
     _stopPump();
     tmrCalibration.stop();
@@ -110,6 +113,7 @@ void PumpController::emergencyStop()
 
 void PumpController::startCalibration()
 {
+    Serial.println("startCalibration");
     if (!(mode == ReadyMode || mode == NotCalibratedMode))
     {
         return;
@@ -130,6 +134,7 @@ void PumpController::_executeCalibrationProcess()
 }
 void PumpController::finishCalibration()
 {
+    Serial.println("finishCalibration");
     speedMlPerMs = (calibration100SecMl * 1000.0) / 100.0;
     if (speedMlPerMs <= 0)
     {

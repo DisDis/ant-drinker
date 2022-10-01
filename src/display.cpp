@@ -33,7 +33,10 @@ void DisplayDevice::init()
     Serial.println("OK");
     // display.flipScreenVertically();
     // display.setContrast(255);
+    turnOn();
     display.setTextSize(1);
+    display.setTextWrap(false);
+    display.setFont();
     display.setTextColor(WHITE);
     display.clearDisplay();
     showSplashScreen();
@@ -43,9 +46,11 @@ void DisplayDevice::showSplashScreen()
 {
     Serial.print("  Splash...");
     // https://github.com/ThingPulse/esp8266-oled-ssd1306/
-    display.drawBitmap((SCREEN_WIDTH - Splash_Logo_width) / 2, 0, splash_Logo_bits, Splash_Logo_width, Splash_Logo_height, 1);
-    display.setCursor((SCREEN_WIDTH - Splash_Logo_width) / 2 + Splash_Logo_width, Splash_Logo_height);
+    display.drawBitmap((SCREEN_WIDTH - Splash_Logo_width) / 2, 15, splash_Logo_bits, Splash_Logo_width, Splash_Logo_height, 1);
+    display.setCursor((SCREEN_WIDTH - Splash_Logo_width) / 2, 0);
     display.println(APP_VERSION);
+    
+
     display.display();
     Serial.println("OK");
 }

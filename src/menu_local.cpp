@@ -1,22 +1,3 @@
-/**************************************************************************
-  Sketch: MENU NAVIGATION WITH JUST 4 BUTTONS
-
-  This Sketch displays Menu without any Serial Communication and the
-  navigation is performed by 4 buttons attached to D3, D8, D4 and D1.
-  Also, attach led on D11 to control brightness from menu.
-  Default brightness is 15% (check line 78)
-
-   NOTE: By default, navigation buttons use INTERNAL_PULLUP feature.
-         This can be changed by commenting the line 45 in "config.h" file
-
-   Uses SSD1306Ascii Library(https://github.com/greiman/SSD1306Ascii)
-   by Bill Grieman
-
-   Created by Tamojit Saha
-    Github: https://github.com/TamojitSaha
-    Website: https://www.tamojitsaha.info/
-***************************************************************************/
-// https://github.com/neu-rah/ArduinoMenu/blob/master/examples/adafruitGfx_lcdMono/lcdMono/lcdMono.ino
 #include <Arduino.h>
 
 // #include <Wire.h>
@@ -25,8 +6,10 @@
 #include <menu.h>
 #include <menuIO/adafruitGfxOut.h>
 #include <menuIO/serialOut.h>
+#include <menuIO/serialIO.h>
+// #include <menuIO/u8g2Out.h>
 //#include <menuIO/keyIn.h>
-#include <menuIO/altKeyIn.h>
+// #include <menuIO/altKeyIn.h>
 #include "state.h"
 #include "i18n/en.h"
 //#include <menuIO/chainStream.h>
@@ -47,40 +30,13 @@ const colorDef<uint16_t> colors[6] MEMMODE = {
 
 #define gfxWidth 128
 #define gfxHeight 64
-#define fontX 6
-// 5
-#define fontY 9
-
-#define LARGE_FONT Verdana12
-
-// Navigate buttons
-#define BTN_SEL ButtonClickPin // Select button
-#define BTN_UP ButtonUpPin     // Up Button
-#define BTN_DOWN ButtonDownPin // Down Button
-#define BTN_ESC ButtonLeftPin  // Exit Button
-// Comment the following to disable internal pullup for Navigate buttons
-//#define NAV_BUTTONS_INPUT_PULLUP
-
-#define TOTAL_NAV_BUTTONS 4 // Total Navigation Button used
+#define fontX 7
+#define fontY 10
 
 #define MAX_DEPTH 4
+#define MENU_ASYNC
 
-#ifdef LOC
-// #define LARGE_FONT
-#define INV
-#endif
 
-/*Do not change the values(recomended)*/
-#ifdef LARGE_FONT
-#define menuFont LARGE_FONT
-#define fontW 8
-#define fontH 16
-#else
-// #define menuFont System5x7
-#define menuFont lcd5x7
-#define fontW 5
-#define fontH 8
-#endif
 
 
 int ledCtrl = HIGH; // Default LED State of LED at D11 is LOW
@@ -130,27 +86,33 @@ result internalLedOff()
     return proceed;
 }
 
+result resetWaterTank1()
+{
+    waterTank1.reset();
+    return proceed;
+}
+
 // ----------------- Water tanks
 TOGGLE(waterTank1.enabled, waterTank1OnOff, "Enabled: ", doNothing, noEvent, wrapStyle, VALUE("Off", false, doNothing, noEvent), VALUE("On", true, doNothing, noEvent));
 
-MENU(tank1Menu, "B1", showEvent, anyEvent, noStyle,
+MENU(tank1Menu, "B1", showEvent, anyEvent, wrapStyle,
      SUBMENU(waterTank1OnOff),
      FIELD(waterTank1.capacity, "Capacity", "ml", 10, 99999, 10, 1, doNothing, enterEvent, wrapStyle),
      FIELD(waterTank1.value, "Left", "ml", 0, 99999, 10, 1, doNothing, enterEvent, wrapStyle),
      
-     OP("Reset", action1, anyEvent),
+     OP("Reset", resetWaterTank1, anyEvent),
      EXIT("<Back"));
-// MENU(tank2Menu, "B2", showEvent, anyEvent, noStyle,  FIELD(waterTank2.capacity, "Capacity", "ml", 10, 9999, 10, 1, doNothing, enterEvent, wrapStyle),     EXIT("<Back"));
+// MENU(tank2Menu, "B2", showEvent, anyEvent, wrapStyle,  FIELD(waterTank2.capacity, "Capacity", "ml", 10, 9999, 10, 1, doNothing, enterEvent, wrapStyle),     EXIT("<Back"));
 
 // SUBMENU(tank2Menu),
 
-MENU(waterTanksMenu, "Water tanks", showEvent, anyEvent, noStyle,
+MENU(waterTanksMenu, "Water tanks", showEvent, anyEvent, wrapStyle,
      SUBMENU(tank1Menu),
      EXIT("<Back"));
 // ---------
 
 // ------- Date/Time
-MENU(dateTimeMenu, "Date/Time[STUB]", showEvent, anyEvent, noStyle,
+MENU(dateTimeMenu, "Date/Time", showEvent, anyEvent, wrapStyle,
      OP("Data: 24.09.2022", action1, anyEvent),
      OP("Time: 10:42", action1, anyEvent),
      OP("Time zone: +3", action1, anyEvent),
@@ -184,7 +146,7 @@ result pump1calibration(eventMask e)
 TOGGLE(pumpController1.isEnabled,pumpController1OnOff, "Enabled: ", doNothing, noEvent, wrapStyle, VALUE("Off", false, doNothing, noEvent), VALUE("On", true, doNothing, noEvent));
 TOGGLE(pumpController1.isInverted,pumpController1Invert, "Dir: ", doNothing, noEvent, wrapStyle, VALUE("Right", false, doNothing, noEvent), VALUE("Left", false, doNothing, noEvent));
 
-MENU(pumpController1CalibrationMenu, "Calibration[STUB]", showEvent, anyEvent, noStyle,
+MENU(pumpController1CalibrationMenu, "Calibration[STUB]", showEvent, anyEvent, wrapStyle,
      OP("Start 100 sec calibration", pump1calibration, anyEvent),
      FIELD(pumpController1.power, "Power", "%", 1, 255, 10, 1, doNothing, enterEvent, wrapStyle),
      OP("Stop pump", pump1Stop, anyEvent),
@@ -193,7 +155,7 @@ MENU(pumpController1CalibrationMenu, "Calibration[STUB]", showEvent, anyEvent, n
      FIELD(pumpController1.speedMlPerMs, "Speed", "Ml/Sec", 1, 255, 1, 1, doNothing, enterEvent, wrapStyle),
      EXIT("<Back"));
 
-MENU(pumpController1Menu, "Pump1", showEvent, anyEvent, noStyle,
+MENU(pumpController1Menu, "Pump1", showEvent, anyEvent, wrapStyle,
      SUBMENU(pumpController1OnOff),
      OP("Mode: Ready", action1, anyEvent),
      FIELD(pumpController1.mlAtTime, "Count", "ml", 10, 99999, 10, 1, doNothing, enterEvent, wrapStyle),
@@ -206,37 +168,37 @@ MENU(pumpController1Menu, "Pump1", showEvent, anyEvent, noStyle,
      EXIT("<Back"));
 
 
-MENU(dispensersMenu, "Dispensers", showEvent, anyEvent, noStyle,
+MENU(dispensersMenu, "Dispensers", showEvent, anyEvent, wrapStyle,
      SUBMENU(pumpController1Menu),
      EXIT("<Back"));
 // --------
 
 // ------------ Notification
-MENU(notificationMenu, "Notification[STUB]", showEvent, anyEvent, noStyle,
+MENU(notificationMenu, "Notification[STUB]", showEvent, anyEvent, wrapStyle,
      OP("On/Off", action1, anyEvent),
      EXIT("<Back"));
 // --------
 // ------------ Buzzer
 TOGGLE(buzzerDevice.enabled, buzzerOnOff, "Enabled: ", doNothing, noEvent, wrapStyle, VALUE("Off", false, doNothing, noEvent), VALUE("On", true, doNothing, noEvent));
-MENU(buzzerSettingMenu, "Buzzer", showEvent, anyEvent, noStyle,
+MENU(buzzerSettingMenu, "Buzzer", showEvent, anyEvent, wrapStyle,
      SUBMENU(buzzerOnOff),
      OP("DoNotDisturb", action1, anyEvent),
      EXIT("<Back"));
 // --------
 // ------------ LED
 TOGGLE(ledDevice.enabled, ledOnOff, "Enabled: ", doNothing, noEvent, wrapStyle, VALUE("Off", false, doNothing, noEvent), VALUE("On", true, doNothing, noEvent));
-MENU(ledSettingMenu, "LED", showEvent, anyEvent, noStyle,
+MENU(ledSettingMenu, "LED", showEvent, anyEvent, wrapStyle,
      SUBMENU(ledOnOff),
      EXIT("<Back"));
 // --------
 // --------------- Network
-MENU(networkMenu, "Network[STUB]", showEvent, anyEvent, noStyle,
+MENU(networkMenu, "Network[STUB]", showEvent, anyEvent, wrapStyle,
      OP("WiFi", action1, anyEvent),
      OP("Telegram", action1, anyEvent),
      OP("MQTT", action1, anyEvent),
      EXIT("<Back"));
 // --------- Version & info
-MENU(versionInfoMenu, "Version & info[STUB]", showEvent, anyEvent, noStyle,
+MENU(versionInfoMenu, "Version & info[STUB]", showEvent, anyEvent, wrapStyle,
      OP(APP_VERSION, action1, anyEvent),
      EXIT("<Back"));
 // ---------------
@@ -254,7 +216,7 @@ result adjustBrightness()
     return proceed;
 }
 
-TOGGLE(ledCtrl, setLed, "Led: ", doNothing, noEvent, noStyle //,doExit,enterEvent,noStyle
+TOGGLE(ledCtrl, setLed, "Led: ", doNothing, noEvent, wrapStyle //,doExit,enterEvent,wrapStyle
        ,
        VALUE("On", HIGH, ledOn, enterEvent) // ledOn function is called
        ,
@@ -262,10 +224,10 @@ TOGGLE(ledCtrl, setLed, "Led: ", doNothing, noEvent, noStyle //,doExit,enterEven
 );
 
 int selTest = 0;
-SELECT(selTest, selMenu, "Select", doNothing, noEvent, noStyle, VALUE("Zero", 0, doNothing, noEvent), VALUE("One", 1, doNothing, noEvent), VALUE("Two", 2, doNothing, noEvent));
+SELECT(selTest, selMenu, "Select", doNothing, noEvent, wrapStyle, VALUE("Zero", 0, doNothing, noEvent), VALUE("One", 1, doNothing, noEvent), VALUE("Two", 2, doNothing, noEvent));
 
 int chooseTest = -1;
-CHOOSE(chooseTest, chooseMenu, "Choose", doNothing, noEvent, noStyle, VALUE("First", 1, doNothing, noEvent), VALUE("Second", 2, doNothing, noEvent), VALUE("Third", 3, doNothing, noEvent), VALUE("Last", -1, doNothing, noEvent));
+CHOOSE(chooseTest, chooseMenu, "Choose", doNothing, noEvent, wrapStyle, VALUE("First", 1, doNothing, noEvent), VALUE("Second", 2, doNothing, noEvent), VALUE("Third", 3, doNothing, noEvent), VALUE("Last", -1, doNothing, noEvent));
 
 // customizing a prompt look!
 // by extending the prompt class
@@ -279,7 +241,7 @@ public:
     }
 };
 
-// MENU(subMenu, "Sub-Menu", showEvent, anyEvent, noStyle, OP("Sub1", showEvent, anyEvent), OP("Sub2", showEvent, anyEvent), OP("Sub3", showEvent, anyEvent), altOP(altPrompt, "", showEvent, anyEvent), EXIT("<Back"));
+// MENU(subMenu, "Sub-Menu", showEvent, anyEvent, wrapStyle, OP("Sub1", showEvent, anyEvent), OP("Sub2", showEvent, anyEvent), OP("Sub3", showEvent, anyEvent), altOP(altPrompt, "", showEvent, anyEvent), EXIT("<Back"));
 
 
      /*SUBMENU(subMenu),
@@ -319,10 +281,10 @@ MENU(mainMenu, "Main menu", doNothing, noEvent, wrapStyle,
 
 // describing a menu output device without macros
 // define at least one panel for menu output
-const panel panels[] MEMMODE = {{0, 0, 128 / fontW, 64 / fontH}};
-navNode *nodes[sizeof(panels) / sizeof(panel)]; // navNodes to store navigation status
-panelsList pList(panels, nodes, 1);             // a list of panels and nodes
-idx_t tops[MAX_DEPTH] = {0, 0};                 // store cursor positions for each level
+// const panel panels[] MEMMODE = {{0, 0, 128 / fontW, 64 / fontH}};
+// navNode *nodes[sizeof(panels) / sizeof(panel)]; // navNodes to store navigation status
+// panelsList pList(panels, nodes, 1);             // a list of panels and nodes
+// idx_t tops[MAX_DEPTH] = {0, 0};                 // store cursor positions for each level
 
 // #ifdef LARGE_FONT
 // SSD1306AsciiOut outOLED(&display, tops, pList, 8, 2); //oled output device menu driver
@@ -334,30 +296,22 @@ idx_t tops[MAX_DEPTH] = {0, 0};                 // store cursor positions for ea
 // menuOut* constMEM outputs[]  MEMMODE  = {&display}; //list of output devices
 // outputsList out(outputs, 1); //outputs list
 
-#ifdef NAV_BUTTONS_INPUT_PULLUP
-// build a map of keys to menu commands
-keyMap joystickBtn_map[] = {
-    {-ButtonClickPin, defaultNavCodes[enterCmd].ch},
-    {-ButtonUpPin, defaultNavCodes[upCmd].ch},
-    {-ButtonDownPin, defaultNavCodes[downCmd].ch},
-    {-ButtonLeftPin, defaultNavCodes[escCmd].ch},
-};
-keyIn<TOTAL_NAV_BUTTONS> joystickBtns(joystickBtn_map); // the input driver
-#else
-// build a map of keys to menu commands
-keyMap joystickBtn_map[] = {
-    {BTN_SEL, defaultNavCodes[enterCmd].ch, INPUT_PULLDOWN},
-    {BTN_UP, defaultNavCodes[upCmd].ch, INPUT_PULLDOWN},
-    {BTN_DOWN, defaultNavCodes[downCmd].ch, INPUT_PULLDOWN},
-    {ButtonLeftPin, defaultNavCodes[leftCmd].ch, INPUT_PULLDOWN},
-    {ButtonRightPin, defaultNavCodes[rightCmd].ch, INPUT_PULLDOWN},
-};
-keyIn<TOTAL_NAV_BUTTONS> joystickBtns(joystickBtn_map); // the input driver
-#endif
 
+// build a map of keys to menu commands
+// keyMap joystickBtn_map[] = {
+//     {BTN_SEL, defaultNavCodes[enterCmd].ch, INPUT_PULLDOWN},
+//     {BTN_UP, defaultNavCodes[upCmd].ch, INPUT_PULLDOWN},
+//     {BTN_DOWN, defaultNavCodes[downCmd].ch, INPUT_PULLDOWN},
+//     {ButtonLeftPin, defaultNavCodes[leftCmd].ch, INPUT_PULLDOWN},
+//     {ButtonRightPin, defaultNavCodes[rightCmd].ch, INPUT_PULLDOWN},
+// };
+// keyIn<TOTAL_NAV_BUTTONS> joystickBtns(joystickBtn_map); // the input driver
+
+//{0,0,14,8},{14,0,14,8}
+//{0, 0, gfxWidth / fontX, gfxHeight / fontY}
 MENU_OUTPUTS(out, MAX_DEPTH, ADAGFX_OUT(display, colors, fontX, fontY, {0, 0, gfxWidth / fontX, gfxHeight / fontY}), SERIAL_OUT(Serial));
-
-NAVROOT(nav, mainMenu, MAX_DEPTH, joystickBtns, out);
+serialIn serial(Serial);
+NAVROOT(nav, mainMenu, MAX_DEPTH, serial/*joystickBtns*/, out);
 
 result alert(menuOut &o, idleEvent e)
 {
@@ -401,20 +355,33 @@ result idle(menuOut &o, idleEvent e)
 
 void menuSetup()
 {
-    joystickBtns.begin();
-    // pinMode(LED_PIN, OUTPUT);
-    // pinMode(LED_BUILTIN, OUTPUT);
-    // oled.begin(&Adafruit128x64, OLED_I2C_ADDRESS); //check config
-    // oled.setFont(menuFont);
-    // oled.clear();
     nav.idleTask = idle; // point a function to be used when menu is suspended
 }
 
 void menuLoop()
 {
     nav.doInput();
+    if (applicationState.buttonClick){
+        nav.doNav(navCmd(enterCmd));
+    }
+    if (applicationState.buttonLeft){
+        nav.doNav(navCmd(leftCmd));
+    }
+
+    if (applicationState.buttonUp){
+        nav.doNav(navCmd(upCmd));
+    }
+    if (applicationState.buttonDown){
+        nav.doNav(navCmd(downCmd));
+    }
+    if (applicationState.buttonRight){
+        nav.doNav(navCmd(rightCmd));
+    }
+     
     if (nav.changed(0))
     { // only draw if changed
+        display.clearDisplay();
+        display.setCursor(0,0);
         nav.doOutput();
         display.display();
     }

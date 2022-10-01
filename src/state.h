@@ -29,7 +29,6 @@ public:
   bool buttonRight = false;
   bool buttonUp = false;
   bool buttonDown = false;
-  bool displayChanged = true;
   
   // status
   bool isWifi = false;

@@ -35,6 +35,8 @@
 
 #define SEPARATE_LINE "-------------------------------"
 
+//#define SKIP_INIT_ALL
+
 AppState applicationState;
 
 // AM2320
@@ -65,7 +67,7 @@ void providePump2(unsigned long ml)
 }
 
 //
-TimerMs tmrButtons(50, 1, 0);
+TimerMs tmrButtons(150, 1, 0);
 
 // Initialize SPIFFS
 void initSPIFFS()
@@ -130,6 +132,8 @@ void setup()
   Serial.println(SEPARATE_LINE);
   Serial.println("Init system:");
   displayDevice.init();
+#ifdef SKIP_INIT_ALL
+#else
   initSPIFFS();
 
   if (initWiFi())
@@ -151,12 +155,12 @@ void setup()
   initSensors();
   ledDevice.init();
   buzzerDevice.init();
+#endif
   menuSetup();
 
   Serial.println("System is initialized");
   Serial.println(SEPARATE_LINE);
   Serial.println();
-  // display.clearDisplay();
 }
 
 unsigned long previousMillis = 0;
@@ -167,19 +171,13 @@ char output[80];
 struct tm timeinfo;
 time_t now;
 
-TimerMs _mainPageTimer(37, 1, 0);
-
 void loopMainPage()
 {
   if (applicationState.buttonClick)
   {
     applicationState.currentPage = menuPage;
   }
-  if (!_mainPageTimer.tick() || !applicationState.displayChanged)
-  {
-    return;
-  }
-  applicationState.displayChanged = false;
+
   display.clearDisplay();
   display.setTextSize(1);
   display.setTextColor(WHITE);
@@ -216,10 +214,6 @@ void loopIdlePage()
 
 void executeCurrentState()
 {
-  if (!applicationState.isDisplayOn)
-  {
-    return;
-  }
   switch (applicationState.currentPage)
   {
   case (graphTPage):
@@ -236,7 +230,7 @@ void executeCurrentState()
     loopIdlePage();
     break;
   default:
-    applicationState.currentPage = mainPage;
+    applicationState.currentPage = idlePage;
   }
 }
 
@@ -258,12 +252,11 @@ void pollSensors()
     applicationState.currentTemperature = sensorTH.readTemperature();
     applicationState.currentHumidity = sensorTH.readHumidity();
     saveTHDateToLog();
-    Serial.print("T: ");
-    Serial.printf("%.1f", applicationState.currentTemperature);
-    Serial.print("H: ");
-    Serial.printf("%.1f", applicationState.currentHumidity);
-    Serial.println();
-    applicationState.displayChanged = true;
+    // Serial.print("T: ");
+    // Serial.printf("%.1f", applicationState.currentTemperature);
+    // Serial.print("H: ");
+    // Serial.printf("%.1f", applicationState.currentHumidity);
+    // Serial.println();
   }
 }
 
@@ -277,6 +270,11 @@ int lastStateD = LOW;
 
 void pollButtons()
 {
+  applicationState.buttonClick = false;
+  applicationState.buttonLeft = false;
+  applicationState.buttonRight = false;
+  applicationState.buttonUp = false;
+  applicationState.buttonDown = false;
   if (tmrButtons.tick())
   {
 
