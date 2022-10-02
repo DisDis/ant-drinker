@@ -146,7 +146,7 @@ void PumpController::_executeCalibrationProcess()
 void PumpController::finishCalibration()
 {
     Serial.println("finishCalibration");
-    speedMlPerMs = (calibration100SecMl * 1000.0) / 100.0;
+    speedMlPerMs = calibration100SecMl / (100.0 * 1000.0);
     if (speedMlPerMs <= 0)
     {
         speedMlPerMs = 0.0;
@@ -176,9 +176,10 @@ void PumpController::setEnabled(bool newValue)
 #define KEY_isEnabled "ENABLED"
 #define KEY_mlAtTime "ML_AT_TIME"
 #define KEY_INTERVAL_SEC "INTERVAL_SEC"
-#define KEY_START_DATETIME_SEC "START_DATETIME_SEC"
+#define KEY_START_DATETIME_SEC "START_DT_SEC"
 #define KEY_isInverted "INVERTED"
 #define KEY_speedMlPerMs "ML_PER_MS"
+#define KEY_calibration100SecMl "CALIB_100_ML"
 #define KEY_power "POWER"
 
 void PumpController::init()
@@ -199,6 +200,7 @@ void PumpController::save()
     preferences.putFloat(KEY_speedMlPerMs, speedMlPerMs);
     preferences.putUChar(KEY_power, power);
     preferences.putULong(KEY_INTERVAL_SEC, tmrAction.getDuration());
+    preferences.putFloat(KEY_calibration100SecMl, calibration100SecMl);
     preferences.putULong(KEY_START_DATETIME_SEC, tmrAction.getStartTime());
     preferences.end();
 }
@@ -212,7 +214,6 @@ void PumpController::saveLastAction()
     preferences.end();
 }
 
-
 void PumpController::load()
 {
     Serial.println("load");
@@ -222,6 +223,7 @@ void PumpController::load()
         mlAtTime = preferences.getFloat(KEY_mlAtTime, mlAtTime);
         isInverted = preferences.getBool(KEY_isInverted, isInverted);
         speedMlPerMs = preferences.getFloat(KEY_speedMlPerMs, speedMlPerMs);
+        calibration100SecMl = preferences.getFloat(KEY_calibration100SecMl, calibration100SecMl);
         power = preferences.getUChar(KEY_power, power);
         tmrAction.setDuration(preferences.getULong(KEY_INTERVAL_SEC, tmrAction.getDuration()));
         tmrAction.setStartTime(preferences.getULong(KEY_START_DATETIME_SEC, tmrAction.getStartTime()));

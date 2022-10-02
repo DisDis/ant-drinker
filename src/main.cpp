@@ -15,7 +15,6 @@
 #include <AsyncElegantOTA.h>
 #include <Wire.h>
 
-
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
 
@@ -42,15 +41,15 @@ extern void saveTHDateToLog();
 
 AppState applicationState;
 
-
-
 BuzzerDevice buzzerDevice;
 GlobalTime globalTime;
 LEDDevice ledDevice;
 SensorDevices sensorDevices(saveTHDateToLog);
 
-WaterTank waterTank1("B1");
-WaterTank waterTank2("B2");
+WaterBottle waterBottle1("B1");
+WaterBottle waterBottle2("B2");
+WaterBottleController waterBottleController1(&waterBottle1);
+WaterBottleController waterBottleController2(&waterBottle2);
 Pump pump1(MOTORA_PWM_PIN, MOTORA_DIR0_PIN, MOTORA_DIR1_PIN);
 Pump pump2(MOTORB_PWM_PIN, MOTORB_DIR0_PIN, MOTORB_DIR1_PIN);
 extern void providePump1(unsigned long ml);
@@ -60,11 +59,11 @@ PumpController pumpController2(PUMP2_ID, &pump2, providePump2);
 
 void providePump1(unsigned long ml)
 {
-  Serial.printf("Pump1: %lu\n", ml);
+  waterBottleController1.provide(ml);
 }
 void providePump2(unsigned long ml)
 {
-  Serial.printf("Pump2: %lu\n", ml);
+  waterBottleController2.provide(ml);
 }
 
 //
@@ -100,9 +99,19 @@ void initOTA()
   Serial.println("OK");
 }
 
+void initWaterBottles()
+{
+  Serial.print("  Water...");
+  waterBottle1.init();
+  waterBottle2.init();
+  waterBottleController1.init();
+  waterBottleController2.init();
+  Serial.println("OK");
+}
 void initPumps()
 {
   Serial.print("  Pumps...");
+
   pump1.init();
   pump2.init();
   pumpController1.init();
@@ -113,7 +122,7 @@ void initPumps()
 void setup()
 {
   // Serial port for debugging purposes
-  Serial.begin(115200);
+  Serial.begin(500000);
   Serial.println(SEPARATE_LINE);
   Serial.println("Init system:");
   displayDevice.init();
@@ -135,22 +144,15 @@ void setup()
   initOTA();
   server.begin();
   globalTime.init();
-  #endif
+#endif
   initButtons();
+  initWaterBottles();
   initPumps();
-  Serial.println("L1");
   sensorDevices.init();
-
-  Serial.println("L2");
   ledDevice.init();
-
-  Serial.println("L3");
   buzzerDevice.init();
-
-  Serial.println("L4");
+  notifications.init();
   menuSetup();
-
-  Serial.println("L5");
 
   Serial.println("System is initialized");
   Serial.println(SEPARATE_LINE);
@@ -238,7 +240,6 @@ void saveTHDateToLog()
   }
 }
 
-
 // Variables will change:
 int lastStateC = LOW; // the previous state from the input pin
 int currentState;     // the current reading from the input pin
@@ -315,4 +316,6 @@ void loop()
   globalTime.loop();
   pumpController1.execute();
   pumpController2.execute();
+  waterBottleController1.execute();
+  waterBottleController2.execute();
 }

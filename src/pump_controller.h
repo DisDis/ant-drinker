@@ -31,8 +31,6 @@ private:
     // Калибровка
     TimerMs tmrCalibration = TimerMs(100 * 1000, 0, 1);
 
-    // Сколько мл получилось при калибровке(100 секунд)
-    float calibration100SecMl = 0.0;
     PumpMode mode = NotCalibratedMode;
     void _executeStartWork();
     void _executeStopWork();
@@ -55,6 +53,8 @@ public:
     float speedMlPerMs = 1.0;
     // 0..255 [1-100%]
     unsigned char power = 255;
+        // Сколько мл получилось при калибровке(100 секунд)
+    float calibration100SecMl = 100.0;
 
     PumpController(const char *id, Pump *pump, ON_FINISH_WORK_CALLBACK finishWorkCallback);
     PumpMode calculateMode();

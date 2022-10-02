@@ -25,7 +25,7 @@ void DisplayDevice::init()
     Serial.print("  display...");
     // pinMode(SDA, PULLUP);
     // pinMode(SCL, PULLUP);
-    Wire.begin(SDA, SCL, 400000);
+    // Wire.begin(SDA, SCL, 400000);
     if (!display.begin(SSD1306_SWITCHCAPVCC, 0x3C))
     {
         Serial.println(F("SSD1306 allocation failed"));

@@ -31,8 +31,8 @@ const colorDef<uint16_t> colors[6] MEMMODE = {
     {{BLACK, WHITE}, {WHITE, BLACK, BLACK}}, // titleColor
 };
 
-#define gfxWidth 127
-#define gfxHeight 63
+#define gfxWidth 128
+#define gfxHeight 64
 #define fontX 7
 #define fontY 9
 
@@ -89,27 +89,27 @@ result internalLedOff()
     return proceed;
 }
 
-result resetWaterTank1()
+result resetWaterBottle1()
 {
-    waterTank1.reset();
+    waterBottle1.reset();
     return proceed;
 }
 
-// ----------------- Water tanks
-TOGGLE(waterTank1.enabled, waterTank1OnOff, "Enabled: ", doNothing, noEvent, wrapStyle, VALUE("Off", false, doNothing, noEvent), VALUE("On", true, doNothing, noEvent));
+// ----------------- Water bottles
+TOGGLE(waterBottle1.enabled, WaterBottle1OnOff, "Enabled: ", doNothing, noEvent, wrapStyle, VALUE("Off", false, doNothing, noEvent), VALUE("On", true, doNothing, noEvent));
 
-MENU(tank1Menu, "B1", showEvent, anyEvent, wrapStyle,
-     SUBMENU(waterTank1OnOff),
-     FIELD(waterTank1.capacity, "Capacity", "ml", 10, 99999, 10, 1, doNothing, enterEvent, wrapStyle),
-     FIELD(waterTank1.value, "Left", "ml", 0, 99999, 10, 1, doNothing, enterEvent, wrapStyle),
+MENU(tank1Menu, "Bottle1", showEvent, anyEvent, wrapStyle,
+     SUBMENU(WaterBottle1OnOff),
+     FIELD(waterBottle1.capacity, "Capacity", "ml", 10, 99999, 10, 1, doNothing, noEvent, wrapStyle),
+     FIELD(waterBottle1.value, "Left", "ml", 0, 99999, 10, 1, doNothing, noEvent, wrapStyle),
 
-     OP("Reset", resetWaterTank1, anyEvent),
+     OP("Reset", resetWaterBottle1, enterEvent),
      EXIT("<Back"));
-// MENU(tank2Menu, "B2", showEvent, anyEvent, wrapStyle,  FIELD(waterTank2.capacity, "Capacity", "ml", 10, 9999, 10, 1, doNothing, enterEvent, wrapStyle),     EXIT("<Back"));
+// MENU(tank2Menu, "B2", showEvent, anyEvent, wrapStyle,  FIELD(WaterBottle2.capacity, "Capacity", "ml", 10, 9999, 10, 1, doNothing, enterEvent, wrapStyle),     EXIT("<Back"));
 
 // SUBMENU(tank2Menu),
 
-MENU(waterTanksMenu, "Water tanks", showEvent, anyEvent, wrapStyle,
+MENU(WaterBottlesMenu, "Water bottles", showEvent, anyEvent, wrapStyle,
      SUBMENU(tank1Menu),
      EXIT("<Back"));
 // ---------
@@ -195,6 +195,13 @@ result pump1Disabled(eventMask e)
     return proceed;
 }
 
+result pump1FinishCalib(eventMask e)
+{
+    Serial.println("Menu - pump1FinishCalib");
+    pumpController1.finishCalibration();
+    return proceed;
+}
+
 bool pumpController1isEnabled = pumpController1.getEnabled();
 result pump1SyncEnabled(eventMask e)
 {
@@ -217,16 +224,31 @@ public:
     }
 };
 
+class PumpSpeedPrompt : public prompt
+{
+public:
+    char output[50];
+    PumpSpeedPrompt(constMEM promptShadow &p) : prompt(p) {}
+    Used printTo(navRoot &root, bool sel, menuOut &out, idx_t idx, idx_t len, idx_t) override
+    {
+        float seedInSec = pumpController1.speedMlPerMs * 1000;
+        snprintf(output, sizeof(output), "Speed: %3f ml/sec", seedInSec);
+        return out.printRaw(F(output), len);
+    }
+};
+
 TOGGLE(pumpController1isEnabled, pumpController1OnOff, "Enabled: ", pump1SyncEnabled, activateEvent, wrapStyle, VALUE("Off", false, pump1Disabled, enterEvent), VALUE("On", true, pump1Enabled, enterEvent));
 TOGGLE(pumpController1.isInverted, pumpController1Invert, "Dir: ", doNothing, noEvent, wrapStyle, VALUE("Right", false, doNothing, noEvent), VALUE("Left", true, doNothing, noEvent));
 
+//FIELD(pumpController1.speedMlPerMs, "Speed", "ml/sec", 1, 255, 1, 1, doNothing, enterEvent, wrapStyle),
 MENU(pumpController1CalibrationMenu, "Calibration", showEvent, anyEvent, wrapStyle,
      OP("Start 100 sec calibration", pump1calibration, enterEvent),
      BARFIELD(pumpController1.power, "Power", "%", 1, 255, 10, 1, doNothing, enterEvent, wrapStyle),
      OP("Stop pump", pump1Stop, enterEvent),
      OP("Start pump", pump1Start, enterEvent),
-     OP("Amount water per 100sec", doNothing, enterEvent),
-     FIELD(pumpController1.speedMlPerMs, "Speed", "Ml/Sec", 1, 255, 1, 1, doNothing, enterEvent, wrapStyle),
+     altOP(PumpSpeedPrompt, "", doNothing, anyEvent),
+     FIELD(pumpController1.calibration100SecMl, "Water per 100sec", "ml", 1, 999, 10, 1, doNothing, enterEvent, wrapStyle),
+     OP("Finish calibration", pump1FinishCalib, enterEvent),
      EXIT("<Back"));
 
 // custom field print
@@ -245,11 +267,11 @@ public:
         out.print((root.navFocus == this && sel) ? (menuField<T>::tunning ? '>' : ':') : ' ');
         out.setColor(valColor, sel, menuField<T>::enabled, ed);
 
-        unsigned long day = menuField<T>::reflex / (unsigned long)(60 * 60 * 24);
+        int day = menuField<T>::reflex / (unsigned long)(60 * 60 * 24);
         unsigned long tmpTime = menuField<T>::reflex - day * (60 * 60 * 24);
-        unsigned long h = tmpTime / (60 * 60);
+        int h = tmpTime / (60 * 60);
         tmpTime = tmpTime - h * (60 * 60);
-        unsigned long m = tmpTime / (60);
+        int m = tmpTime / (60);
 
         char buffer[] = "00d00h00m ";
         snprintf(buffer, sizeof(buffer), "%02dd%02dh%02dm", day, h, m);
@@ -346,7 +368,7 @@ OP("LED Off", internalLedOff, enterEvent) // will turn off built-in LED
 
 MENU(mainMenu, "Main menu", doNothing, noEvent, wrapStyle,
 
-     SUBMENU(waterTanksMenu),
+     SUBMENU(WaterBottlesMenu),
      SUBMENU(dateTimeMenu),
      SUBMENU(dispensersMenu),
      SUBMENU(notificationMenu),
@@ -359,7 +381,7 @@ MENU(mainMenu, "Main menu", doNothing, noEvent, wrapStyle,
 /*
 
 MENU(mainMenu, "Main menu", doNothing, noEvent, wrapStyle,
-     SUBMENU(waterTanksMenu),
+     SUBMENU(WaterBottlesMenu),
      SUBMENU(dateTimeMenu),
 
      OP("Op1", action1, anyEvent), OP("Op2", action2, enterEvent),

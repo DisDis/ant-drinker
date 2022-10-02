@@ -1,16 +1,16 @@
 #ifndef _WATER_TANK_h
 #define _WATER_TANK_h
 
-class WaterTank
+class WaterBottle
 {
 private:
     const char *_id;
-
+    friend class WaterBottleController;
 public:
-    unsigned int capacity = 0;
-    float value = 0;
+    unsigned int capacity = 1000;
+    float value = 1000;
 
-    WaterTank(const char *id);
+    WaterBottle(const char *id);
     bool enabled = false;
     inline unsigned int getCapacity()
     {
@@ -21,9 +21,19 @@ public:
         return value;
     }
     void reset();
-
+    void init();
     void load();
     void save();
+};
+
+class WaterBottleController
+{
+public:
+    WaterBottle *wtank;
+    WaterBottleController(WaterBottle *wtank);
+    void provide(unsigned long ml);
+    void init();
+    void execute();
 };
 
 #endif

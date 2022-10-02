@@ -1,3 +1,6 @@
+#ifndef _COMMON_h
+#define _COMMON_h
+
 #include "config.h"
 #include <Preferences.h>
 #include "pump_controller.h"
@@ -8,15 +11,18 @@
 #include "water_tank.h"
 #include "led_device.h"
 #include "sensor_devices.h"
+#include "notifications.h"
 
 
 extern Preferences preferences;
 extern unsigned long currentMillis;
 extern BuzzerDevice buzzerDevice;
 extern GlobalTime globalTime;
-
-extern WaterTank waterTank1;
-extern WaterTank waterTank2;
+extern Notifications notifications;
+extern WaterBottle waterBottle1;
+extern WaterBottle waterBottle2;
+extern WaterBottleController waterBottleController1;
+extern WaterBottleController waterBottleController2;
 extern Pump pump1;
 extern Pump pump2;
 extern PumpController pumpController1;
@@ -24,3 +30,4 @@ extern PumpController pumpController2;
 extern LEDDevice ledDevice;
 extern SensorDevices sensorDevices;
 
+#endif
