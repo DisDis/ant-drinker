@@ -32,6 +32,7 @@
 #include "global_time.h"
 #include "led_device.h"
 #include "common.h"
+#include "Version.h"
 
 #define SEPARATE_LINE "-------------------------------"
 
@@ -124,6 +125,7 @@ void setup()
   // Serial port for debugging purposes
   Serial.begin(500000);
   Serial.println(SEPARATE_LINE);
+  Serial.printf("Project version v%s, built %s\n",VERSION,BUILD_TIMESTAMP);
   Serial.println("Init system:");
   displayDevice.init();
 #ifdef SKIP_INIT_ALL

@@ -16,8 +16,6 @@
 #define RO_MODE true
 #define RW_MODE false
 
-#define APP_VERSION "v0.7"
-
 #define wifiSSIDKey "ssid" 
 #define wifiPassKey "pass"
 

@@ -15,6 +15,7 @@
 #include "state.h"
 #include "i18n/en.h"
 #include "common.h"
+#include "Version.h"
 //#include <menuIO/chainStream.h>
 using namespace Menu;
 
@@ -326,7 +327,8 @@ MENU(networkMenu, "Network[STUB]", showEvent, anyEvent, wrapStyle,
      EXIT("<Back"));
 // --------- Version & info
 MENU(versionInfoMenu, "Version & info[STUB]", showEvent, anyEvent, wrapStyle,
-     OP(APP_VERSION, action1, anyEvent),
+     OP(VERSION, doNothing, noEvent),
+     OP(BUILD_TIMESTAMP, doNothing, noEvent),
      EXIT("<Back"));
 // ---------------
 // ---------------

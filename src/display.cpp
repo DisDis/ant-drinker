@@ -4,13 +4,13 @@
 #include "splash.h"
 #include "state.h"
 #include "common.h"
+#include "Version.h"
 
 #define DISPLAYOFF 0xAE
 #define DISPLAYON 0xAF
 #define NORMALDISPLAY 0xA6
 #define INVERTDISPLAY 0xA7
-#define OLED_RESET     -1 // Reset pin # (or -1 if sharing Arduino reset pin)
-
+#define OLED_RESET -1 // Reset pin # (or -1 if sharing Arduino reset pin)
 
 Adafruit_SSD1306 display = Adafruit_SSD1306(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
@@ -48,9 +48,8 @@ void DisplayDevice::showSplashScreen()
     Serial.print("  Splash...");
     // https://github.com/ThingPulse/esp8266-oled-ssd1306/
     display.drawBitmap((SCREEN_WIDTH - Splash_Logo_width) / 2, 15, splash_Logo_bits, Splash_Logo_width, Splash_Logo_height, 1);
-    display.setCursor((SCREEN_WIDTH - Splash_Logo_width) / 2, 0);
-    display.println(APP_VERSION);
-    
+    display.setCursor(0, 0);
+    display.printf("v%s, %s", VERSION, BUILD_TIMESTAMP);
 
     display.display();
     Serial.println("OK");
