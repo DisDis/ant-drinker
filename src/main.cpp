@@ -55,8 +55,8 @@ Pump pump1(MOTORA_PWM_PIN, MOTORA_DIR0_PIN, MOTORA_DIR1_PIN);
 Pump pump2(MOTORB_PWM_PIN, MOTORB_DIR0_PIN, MOTORB_DIR1_PIN);
 extern void providePump1(unsigned long ml);
 extern void providePump2(unsigned long ml);
-PumpController pumpController1("pump1", &pump1, providePump1);
-PumpController pumpController2("pump2", &pump2, providePump2);
+PumpController pumpController1(PUMP1_ID, &pump1, providePump1);
+PumpController pumpController2(PUMP2_ID, &pump2, providePump2);
 
 void providePump1(unsigned long ml)
 {
@@ -138,10 +138,19 @@ void setup()
   #endif
   initButtons();
   initPumps();
+  Serial.println("L1");
   sensorDevices.init();
+
+  Serial.println("L2");
   ledDevice.init();
+
+  Serial.println("L3");
   buzzerDevice.init();
+
+  Serial.println("L4");
   menuSetup();
+
+  Serial.println("L5");
 
   Serial.println("System is initialized");
   Serial.println(SEPARATE_LINE);
@@ -304,4 +313,6 @@ void loop()
   executeCurrentState();
   sensorDevices.poll();
   globalTime.loop();
+  pumpController1.execute();
+  pumpController2.execute();
 }

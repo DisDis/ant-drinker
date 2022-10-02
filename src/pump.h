@@ -12,9 +12,9 @@
 class Pump
 {
 private:
-    unsigned char directionPin0 = 1;
-    unsigned char directionPin1 = 2;
-    unsigned char pwmPin = 3;
+    unsigned char directionPin0;
+    unsigned char directionPin1;
+    unsigned char pwmPin;
     //частота ШИМ
     const int frequency = 30000;
 

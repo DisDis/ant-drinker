@@ -1,6 +1,7 @@
 #include "buzzer.h"
 #include "config.h"
 #include <Arduino.h>
+#include "common.h"
 
 BuzzerDevice::BuzzerDevice()
 {
@@ -12,6 +13,8 @@ void BuzzerDevice::init()
     pinMode(BUZZER_PIN, OUTPUT);
     digitalWrite(BUZZER_PIN, LOW);
     Serial.println("OK");
+    Serial.print("    state...");
+    load();
 }
 
 void BuzzerDevice::loop()
@@ -20,11 +23,11 @@ void BuzzerDevice::loop()
     {
         return;
     }
-    if (durationSound.ready())
+    if (durationSound.tick() && durationSound.ready())
     {
         digitalWrite(BUZZER_PIN, LOW);
     }
-    if (interval.ready())
+    if (interval.tick())
     {
         count--;
         if (count <= 0)
@@ -45,7 +48,7 @@ void BuzzerDevice::_turnOnSound()
 
 void BuzzerDevice::turnOn(char count)
 {
-    if (enabled)
+    if (isEnabled)
     {
         sound = true;
         if (count <= 0)
@@ -64,4 +67,32 @@ void BuzzerDevice::turnOff()
     digitalWrite(BUZZER_PIN, LOW);
     durationSound.stop();
     interval.stop();
+}
+
+#define BUZZER_PREF_NAME "sensors"
+#define KEY_isEnabled "ENABLED"
+
+void BuzzerDevice::save()
+{
+    Serial.println("save");
+    preferences.begin(BUZZER_PREF_NAME, RW_MODE);
+    preferences.putBool(KEY_isEnabled, isEnabled);
+    // preferences.putFloat(KEY_mlAtTime, mlAtTime);
+    // preferences.putBool(KEY_isInverted, isInverted);
+    // preferences.putFloat(KEY_speedMlPerMs, speedMlPerMs);
+    // preferences.putUChar(KEY_power, power);
+    preferences.end();
+}
+void BuzzerDevice::load()
+{
+    Serial.println("load");
+    if (preferences.begin(BUZZER_PREF_NAME, RO_MODE))
+    {
+        isEnabled = preferences.getBool(KEY_isEnabled, isEnabled);
+        // mlAtTime = preferences.getFloat(KEY_mlAtTime, mlAtTime);
+        // isInverted = preferences.getBool(KEY_isInverted, isInverted);
+        // speedMlPerMs = preferences.getFloat(KEY_speedMlPerMs, speedMlPerMs);
+        // power = preferences.getUChar(KEY_power, power);
+    }
+    preferences.end();
 }

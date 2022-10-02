@@ -1,6 +1,5 @@
 #include "config.h"
 #include <Preferences.h>
-#include <Adafruit_SSD1306.h>
 #include "pump_controller.h"
 #include "global_time.h"
 #include "pump.h"
@@ -24,14 +23,4 @@ extern PumpController pumpController1;
 extern PumpController pumpController2;
 extern LEDDevice ledDevice;
 extern SensorDevices sensorDevices;
-
-class Config{
-    public:
-      Config();
-      void load(PumpController* pc);
-    private:
-
-};
-
-extern Config appConfig;
 

@@ -1,13 +1,19 @@
 #include "TimerMs.h"
 #include "SimpleTimer.h"
 #include "pump_controller.h"
+#include "config.h"
+#include "common.h"
+
+const char *PumpModeName[] = {"Not Calibrated", "Calibrating", "Ready", "Working", "TurnOn"};
 
 void PumpController::_runPump()
 {
+    Serial.println("_runPump");
     pump->start(power, isInverted);
 }
 void PumpController::_stopPump()
 {
+    Serial.println("_stopPump");
     pump->stop();
 }
 
@@ -42,6 +48,7 @@ void PumpController::_executeStartWork()
     {
         return;
     }
+    Serial.println("_executeStartWork");
     tmrAction.restart();
     mode = WorkingMode;
     tmrWork.setDuration(truncf(mlAtTime / speedMlPerMs));
@@ -54,6 +61,7 @@ void PumpController::_executeStopWork()
     {
         return;
     }
+    Serial.println("_executeStopWork");
     if (mode != WorkingMode)
     {
         tmrWork.stop();
@@ -67,12 +75,14 @@ void PumpController::_executeStopWork()
     {
         finishWorkCallback(realMl);
     }
+    saveLastAction();
+    globalTime.save();
 }
 
 void PumpController::execute()
 {
     // Pump disabled
-    if (!isEnabled)
+    if (!_enabled)
     {
         return;
     }
@@ -119,15 +129,16 @@ void PumpController::startCalibration()
         return;
     }
     mode = CalibratingMode;
-    tmrCalibration.restart();
+    tmrCalibration.start();
     _runPump();
 }
 void PumpController::_executeCalibrationProcess()
 {
-    if (!tmrCalibration.elapsed())
+    if (!(tmrCalibration.tick() && tmrCalibration.ready()))
     {
         return;
     }
+    Serial.println("_executeCalibrationProcess");
     tmrCalibration.stop();
     mode = NotCalibratedMode;
     _stopPump();
@@ -143,4 +154,85 @@ void PumpController::finishCalibration()
         return;
     }
     mode = ReadyMode;
+}
+
+void PumpController::setEnabled(bool newValue)
+{
+    if (newValue == _enabled)
+    {
+        return;
+    }
+    _enabled = newValue;
+    if (_enabled)
+    {
+        tmrAction.start();
+    }
+    else
+    {
+        tmrAction.stop();
+    }
+}
+
+#define KEY_isEnabled "ENABLED"
+#define KEY_mlAtTime "ML_AT_TIME"
+#define KEY_INTERVAL_SEC "INTERVAL_SEC"
+#define KEY_START_DATETIME_SEC "START_DATETIME_SEC"
+#define KEY_isInverted "INVERTED"
+#define KEY_speedMlPerMs "ML_PER_MS"
+#define KEY_power "POWER"
+
+void PumpController::init()
+{
+    Serial.print("  PumpController...");
+    Serial.print("    ");
+    load();
+    Serial.println("    OK");
+}
+
+void PumpController::save()
+{
+    Serial.println("save");
+    preferences.begin(_id, RW_MODE);
+    preferences.putBool(KEY_isEnabled, _enabled);
+    preferences.putFloat(KEY_mlAtTime, mlAtTime);
+    preferences.putBool(KEY_isInverted, isInverted);
+    preferences.putFloat(KEY_speedMlPerMs, speedMlPerMs);
+    preferences.putUChar(KEY_power, power);
+    preferences.putULong(KEY_INTERVAL_SEC, tmrAction.getDuration());
+    preferences.putULong(KEY_START_DATETIME_SEC, tmrAction.getStartTime());
+    preferences.end();
+}
+
+void PumpController::saveLastAction()
+{
+    Serial.println("saveLastAction");
+    preferences.begin(_id, RW_MODE);
+    preferences.putULong(KEY_INTERVAL_SEC, tmrAction.getDuration());
+    preferences.putULong(KEY_START_DATETIME_SEC, tmrAction.getStartTime());
+    preferences.end();
+}
+
+
+void PumpController::load()
+{
+    Serial.println("load");
+    if (preferences.begin(_id, RO_MODE))
+    {
+        _enabled = preferences.getBool(KEY_isEnabled, _enabled);
+        mlAtTime = preferences.getFloat(KEY_mlAtTime, mlAtTime);
+        isInverted = preferences.getBool(KEY_isInverted, isInverted);
+        speedMlPerMs = preferences.getFloat(KEY_speedMlPerMs, speedMlPerMs);
+        power = preferences.getUChar(KEY_power, power);
+        tmrAction.setDuration(preferences.getULong(KEY_INTERVAL_SEC, tmrAction.getDuration()));
+        tmrAction.setStartTime(preferences.getULong(KEY_START_DATETIME_SEC, tmrAction.getStartTime()));
+    }
+    preferences.end();
+    if (_enabled)
+    {
+        tmrAction.resume();
+    }
+    else
+    {
+        tmrAction.stop();
+    }
 }

@@ -1,6 +1,8 @@
 #ifndef _Config_h
 #define _Config_h
 
+#define SKIP_NTP_SYNC
+
 #define SENSOR_T_H_DHT
 //#define SENSOR_T_H_AM2320
 #define DHTTYPE DHT22
@@ -14,7 +16,7 @@
 #define RO_MODE true
 #define RW_MODE false
 
-#define APP_VERSION "v0.5"
+#define APP_VERSION "v0.6"
 
 #define wifiSSIDKey "ssid" 
 #define wifiPassKey "pass"
@@ -24,7 +26,8 @@
 
 #define globalTimeKey "dt"
 
-
+#define PUMP1_ID "pump1"
+#define PUMP2_ID "pump2"
 
 #define ButtonClickPin 34
 #define ButtonLeftPin 35

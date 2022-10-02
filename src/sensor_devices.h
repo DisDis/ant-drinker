@@ -21,6 +21,8 @@ class SensorDevices{
         SensorDevices(ON_WATER_LEVEL_CHANGED_CALLBACK waterLevelChangedCallback);
         void init();
         void poll();
+        void save();
+        void load();
     private:
         TimerMs tmrTempHumi = TimerMs(2000, 1, 0);
     ON_WATER_LEVEL_CHANGED_CALLBACK waterLevelChangedCallback = nullptr;

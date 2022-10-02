@@ -1,7 +1,7 @@
 #include <Arduino.h>
 #include "global_time.h"
-#include "common.h"
 #include "config.h"
+#include "common.h"
 
 // NTP
 const char *ntpServer1 = "time.google.com";
@@ -17,7 +17,7 @@ void GlobalTime::init()
     struct tm timeinfo;
     Serial.println("  DateTime:");
     Serial.println("   restore ...");
-    restoreLastDateTime();
+    load();
     if (!getLocalTime(&timeinfo))
     {
         Serial.println(" Error: Could not obtain time info");
@@ -30,9 +30,9 @@ void GlobalTime::init()
     }
 
     Serial.println("   NTP ");
-    ///FIXME: Enable!!
-    //configTime(0, 3600 * timeZone /*+3 GMT*/, ntpServer1, ntpServer2, ntpServer3);
-
+#ifndef SKIP_NTP_SYNC
+    configTime(0, 3600 * timeZone /*+3 GMT*/, ntpServer1, ntpServer2, ntpServer3);
+#endif
     if (!getLocalTime(&timeinfo))
     {
         Serial.println(" Error: Could not obtain time info");
@@ -45,27 +45,28 @@ void GlobalTime::init()
 
 void GlobalTime::loop()
 {
-    if (onSave.ready())
+    if (onSave.tick() && onSave.ready())
     {
-        storeDateTime();
+        save();
     }
 }
 
-void GlobalTime::restoreLastDateTime()
+void GlobalTime::load()
 {
-    preferences.begin(globalTimeConfigKey, RO_MODE);
-
-    time(&lastSyncDateTime);
-    time_t datetimeValue = preferences.getULong(globalTimeKey, 0);
-    if (lastSyncDateTime < datetimeValue)
+    if (preferences.begin(globalTimeConfigKey, RO_MODE))
     {
-        lastSyncDateTime = datetimeValue;
-        struct timeval now = {.tv_sec = lastSyncDateTime};
-        settimeofday(&now, NULL);
+        time(&lastSyncDateTime);
+        time_t datetimeValue = preferences.getULong(globalTimeKey, 0);
+        if (lastSyncDateTime < datetimeValue)
+        {
+            lastSyncDateTime = datetimeValue;
+            struct timeval now = {.tv_sec = lastSyncDateTime};
+            settimeofday(&now, NULL);
+        }
     }
     preferences.end();
 }
-void GlobalTime::storeDateTime()
+void GlobalTime::save()
 {
     time(&lastSyncDateTime);
     preferences.begin(globalTimeConfigKey, RW_MODE);

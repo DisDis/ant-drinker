@@ -3,8 +3,8 @@
 
 #include <Arduino.h>
 
-
-class DateTimeTimer{
+class DateTimeTimer
+{
 public:
     DateTimeTimer(){
 
@@ -24,13 +24,20 @@ public:
         return now - startDT;
     }
 
-     // перезапустить
-    inline void restart() {
+    // перезапустить
+    inline void restart()
+    {
         start();
     }
 
-    time_t getStartTime(){
+    time_t getStartTime()
+    {
         return startDT;
+    }
+
+    void setStartTime(time_t newValue)
+    {
+        startDT = newValue;
     }
 
     bool isHappened()
@@ -41,26 +48,32 @@ public:
         }
         return (getActuallyPassed() >= duration);
     }
-    void start(){
+    void start()
+    {
         time(&startDT);
         enabled = true;
     }
 
-    void resume(){
+    void resume()
+    {
         enabled = true;
     }
 
-    void stop(){
+    void stop()
+    {
         enabled = false;
     }
+
+    // TODO: PUBLIC FOR MENU :(
+    // Время в секундах
+    unsigned long duration = 5 * 60;
 
 private:
     bool enabled = false;
     // Время в секундах.
     time_t startDT = 0;
-    // Время в секундах
-    unsigned long duration = 60;
-    static time_t now;
+
+    time_t now;
 };
 
 #endif

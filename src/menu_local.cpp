@@ -11,6 +11,7 @@
 // #include <menuIO/u8g2Out.h>
 //#include <menuIO/keyIn.h>
 // #include <menuIO/altKeyIn.h>
+#include <plugin/barField.h>
 #include "state.h"
 #include "i18n/en.h"
 #include "common.h"
@@ -19,7 +20,7 @@ using namespace Menu;
 
 // https://github.com/neu-rah/ArduinoMenu/blob/master/examples/targetSel/targetSel/targetSel.ino
 // define menu colors --------------------------------------------------------
-//each color is in the format:
+// each color is in the format:
 //  {{disabled normal,disabled selected},{enabled normal,enabled selected, enabled editing}}
 const colorDef<uint16_t> colors[6] MEMMODE = {
     {{WHITE, BLACK}, {WHITE, BLACK, BLACK}}, // bgColor
@@ -40,9 +41,6 @@ const colorDef<uint16_t> colors[6] MEMMODE = {
 
 #define MAX_DEPTH 4
 #define MENU_ASYNC
-
-
-
 
 int ledCtrl = HIGH; // Default LED State of LED at D11 is LOW
 
@@ -104,7 +102,7 @@ MENU(tank1Menu, "B1", showEvent, anyEvent, wrapStyle,
      SUBMENU(waterTank1OnOff),
      FIELD(waterTank1.capacity, "Capacity", "ml", 10, 99999, 10, 1, doNothing, enterEvent, wrapStyle),
      FIELD(waterTank1.value, "Left", "ml", 0, 99999, 10, 1, doNothing, enterEvent, wrapStyle),
-     
+
      OP("Reset", resetWaterTank1, anyEvent),
      EXIT("<Back"));
 // MENU(tank2Menu, "B2", showEvent, anyEvent, wrapStyle,  FIELD(waterTank2.capacity, "Capacity", "ml", 10, 9999, 10, 1, doNothing, enterEvent, wrapStyle),     EXIT("<Back"));
@@ -127,9 +125,9 @@ public:
     DatePrompt(constMEM promptShadow &p) : prompt(p) {}
     Used printTo(navRoot &root, bool sel, menuOut &out, idx_t idx, idx_t len, idx_t) override
     {
-         time(&nowMenu);
-  localtime_r(&nowMenu, &timeinfoMenu);
-  strftime(outpuDateTime, 80, MENU_DATE_FORMAT, &timeinfoMenu);
+        time(&nowMenu);
+        localtime_r(&nowMenu, &timeinfoMenu);
+        strftime(outpuDateTime, 80, MENU_DATE_FORMAT, &timeinfoMenu);
         return out.printRaw(F(outpuDateTime), len);
     }
 };
@@ -137,16 +135,23 @@ public:
 class TimePrompt : public prompt
 {
 public:
+    unsigned int t = 0;
+    unsigned int last = 0;
     TimePrompt(constMEM promptShadow &p) : prompt(p) {}
     Used printTo(navRoot &root, bool sel, menuOut &out, idx_t idx, idx_t len, idx_t) override
     {
-         time(&nowMenu);
-  localtime_r(&nowMenu, &timeinfoMenu);
-  strftime(outpuDateTime, 80, MENU_TIME_FORMAT, &timeinfoMenu);
+        last = t;
+        time(&nowMenu);
+        localtime_r(&nowMenu, &timeinfoMenu);
+        strftime(outpuDateTime, 80, MENU_TIME_FORMAT, &timeinfoMenu);
         return out.printRaw(F(outpuDateTime), len);
     }
+    virtual bool changed(const navNode &nav, const menuOut &out, bool sub = true)
+    {
+        t = millis() / 1000;
+        return last != t;
+    }
 };
-
 
 MENU(dateTimeMenu, "Date/Time", showEvent, anyEvent, wrapStyle,
      altOP(DatePrompt, "", doNothing, anyEvent),
@@ -177,6 +182,26 @@ result pump1calibration(eventMask e)
     return proceed;
 }
 
+result pump1Enabled(eventMask e)
+{
+    Serial.println("Menu - pump1Enabled");
+    pumpController1.setEnabled(true);
+    return proceed;
+}
+result pump1Disabled(eventMask e)
+{
+    Serial.println("Menu - pump1Disabled");
+    pumpController1.setEnabled(false);
+    return proceed;
+}
+
+bool pumpController1isEnabled = pumpController1.getEnabled();
+result pump1SyncEnabled(eventMask e)
+{
+    Serial.println("Menu - pump1SyncEnabled");
+    pumpController1isEnabled = pumpController1.getEnabled();
+    return proceed;
+}
 
 // ------------ Dispensers
 
@@ -187,35 +212,66 @@ public:
     PumpModePrompt(constMEM promptShadow &p) : prompt(p) {}
     Used printTo(navRoot &root, bool sel, menuOut &out, idx_t idx, idx_t len, idx_t) override
     {
-        snprintf(output, 80, "Mode: %s", "TEST");
+        snprintf(output, 80, "Mode: %s", PumpModeName[pumpController1.getMode() - 1]);
         return out.printRaw(F(output), len);
     }
 };
 
-TOGGLE(pumpController1.isEnabled,pumpController1OnOff, "Enabled: ", doNothing, noEvent, wrapStyle, VALUE("Off", false, doNothing, noEvent), VALUE("On", true, doNothing, noEvent));
-TOGGLE(pumpController1.isInverted,pumpController1Invert, "Dir: ", doNothing, noEvent, wrapStyle, VALUE("Right", false, doNothing, noEvent), VALUE("Left", false, doNothing, noEvent));
+TOGGLE(pumpController1isEnabled, pumpController1OnOff, "Enabled: ", pump1SyncEnabled, activateEvent, wrapStyle, VALUE("Off", false, pump1Disabled, enterEvent), VALUE("On", true, pump1Enabled, enterEvent));
+TOGGLE(pumpController1.isInverted, pumpController1Invert, "Dir: ", doNothing, noEvent, wrapStyle, VALUE("Right", false, doNothing, noEvent), VALUE("Left", true, doNothing, noEvent));
 
 MENU(pumpController1CalibrationMenu, "Calibration", showEvent, anyEvent, wrapStyle,
-     OP("Start 100 sec calibration", pump1calibration, anyEvent),
-     FIELD(pumpController1.power, "Power", "%", 1, 255, 10, 1, doNothing, enterEvent, wrapStyle),
-     OP("Stop pump", pump1Stop, anyEvent),
-     OP("Start pump", pump1Start, anyEvent),
-     OP("Amount water per 100sec", doNothing, anyEvent),
+     OP("Start 100 sec calibration", pump1calibration, enterEvent),
+     BARFIELD(pumpController1.power, "Power", "%", 1, 255, 10, 1, doNothing, enterEvent, wrapStyle),
+     OP("Stop pump", pump1Stop, enterEvent),
+     OP("Start pump", pump1Start, enterEvent),
+     OP("Amount water per 100sec", doNothing, enterEvent),
      FIELD(pumpController1.speedMlPerMs, "Speed", "Ml/Sec", 1, 255, 1, 1, doNothing, enterEvent, wrapStyle),
      EXIT("<Back"));
+
+// custom field print
+// implementing a customized menu component
+// this numeric field prints formatted number with leading zeros
+template <typename T>
+class leadsField : public menuField<T>
+{
+public:
+    using menuField<T>::menuField;
+    Used printTo(navRoot &root, bool sel, menuOut &out, idx_t idx, idx_t len, idx_t panelNr = 0) override
+    {
+        menuField<T>::reflex = menuField<T>::target();
+        prompt::printTo(root, sel, out, idx, len);
+        bool ed = this == root.navFocus;
+        out.print((root.navFocus == this && sel) ? (menuField<T>::tunning ? '>' : ':') : ' ');
+        out.setColor(valColor, sel, menuField<T>::enabled, ed);
+
+        unsigned long day = menuField<T>::reflex / (unsigned long)(60 * 60 * 24);
+        unsigned long tmpTime = menuField<T>::reflex - day * (60 * 60 * 24);
+        unsigned long h = tmpTime / (60 * 60);
+        tmpTime = tmpTime - h * (60 * 60);
+        unsigned long m = tmpTime / (60);
+
+        char buffer[] = "00d00h00m ";
+        snprintf(buffer, sizeof(buffer), "%02dd%02dh%02dm", day, h, m);
+        out.print(buffer);
+        out.setColor(unitColor, sel, menuField<T>::enabled, ed);
+        print_P(out, menuField<T>::units(), len);
+        return len;
+    }
+};
 
 MENU(pumpController1Menu, "Pump1", showEvent, anyEvent, wrapStyle,
      SUBMENU(pumpController1OnOff),
      altOP(PumpModePrompt, "", doNothing, anyEvent),
      FIELD(pumpController1.mlAtTime, "Count", "ml", 10, 999, 10, 1, doNothing, enterEvent, wrapStyle),
-     OP("Interval: 5 hour", action1, anyEvent),
-     OP("Stop pump", pump1Stop, anyEvent),
-     OP("Start pump", pump1Start, anyEvent),
-     OP("Emergency Stop", pump1EmergencyStop, anyEvent),
+     altFIELD(leadsField, pumpController1.tmrAction.duration, "Interval", "", 60, 31 * 24 * 60 * 60, 5 * 60, 60, doNothing, enterEvent, wrapStyle),
+
+     OP("Stop pump", pump1Stop, enterEvent),
+     OP("Start pump", pump1Start, enterEvent),
+     OP("Emergency Stop", pump1EmergencyStop, enterEvent),
      SUBMENU(pumpController1CalibrationMenu),
      SUBMENU(pumpController1Invert),
      EXIT("<Back"));
-
 
 MENU(dispensersMenu, "Dispensers", showEvent, anyEvent, wrapStyle,
      SUBMENU(pumpController1Menu),
@@ -228,7 +284,7 @@ MENU(notificationMenu, "Notification[STUB]", showEvent, anyEvent, wrapStyle,
      EXIT("<Back"));
 // --------
 // ------------ Buzzer
-TOGGLE(buzzerDevice.enabled, buzzerOnOff, "Enabled: ", doNothing, noEvent, wrapStyle, VALUE("Off", false, doNothing, noEvent), VALUE("On", true, doNothing, noEvent));
+TOGGLE(buzzerDevice.isEnabled, buzzerOnOff, "Enabled: ", doNothing, noEvent, wrapStyle, VALUE("Off", false, doNothing, noEvent), VALUE("On", true, doNothing, noEvent));
 MENU(buzzerSettingMenu, "Buzzer", showEvent, anyEvent, wrapStyle,
      SUBMENU(buzzerOnOff),
      OP("DoNotDisturb", action1, anyEvent),
@@ -252,7 +308,6 @@ MENU(versionInfoMenu, "Version & info[STUB]", showEvent, anyEvent, wrapStyle,
      EXIT("<Back"));
 // ---------------
 // ---------------
-
 
 int brightnessValue = 15; // Default LED brightness value
 result adjustBrightness()
@@ -278,23 +333,19 @@ SELECT(selTest, selMenu, "Select", doNothing, noEvent, wrapStyle, VALUE("Zero", 
 int chooseTest = -1;
 CHOOSE(chooseTest, chooseMenu, "Choose", doNothing, noEvent, wrapStyle, VALUE("First", 1, doNothing, noEvent), VALUE("Second", 2, doNothing, noEvent), VALUE("Third", 3, doNothing, noEvent), VALUE("Last", -1, doNothing, noEvent));
 
+// MENU(subMenu, "Sub-Menu", showEvent, anyEvent, wrapStyle, OP("Sub1", showEvent, anyEvent), OP("Sub2", showEvent, anyEvent),
+// OP("Sub3", showEvent, anyEvent), altOP(altPrompt, "", showEvent, anyEvent), EXIT("<Back"));
 
+/*SUBMENU(subMenu),
+ SUBMENU(setLed),
 
-// MENU(subMenu, "Sub-Menu", showEvent, anyEvent, wrapStyle, OP("Sub1", showEvent, anyEvent), OP("Sub2", showEvent, anyEvent), 
-//OP("Sub3", showEvent, anyEvent), altOP(altPrompt, "", showEvent, anyEvent), EXIT("<Back"));
+OP("LED On", internalLedOn, enterEvent) // will turn on built-in LED
+,
+OP("LED Off", internalLedOff, enterEvent) // will turn off built-in LED
+*/
 
+MENU(mainMenu, "Main menu", doNothing, noEvent, wrapStyle,
 
-     /*SUBMENU(subMenu),
-      SUBMENU(setLed),
-     
-     OP("LED On", internalLedOn, enterEvent) // will turn on built-in LED
-     ,
-     OP("LED Off", internalLedOff, enterEvent) // will turn off built-in LED
-     */
-
-
-MENU(mainMenu, "Main menu", doNothing, noEvent, wrapStyle, 
-     
      SUBMENU(waterTanksMenu),
      SUBMENU(dateTimeMenu),
      SUBMENU(dispensersMenu),
@@ -303,39 +354,36 @@ MENU(mainMenu, "Main menu", doNothing, noEvent, wrapStyle,
      SUBMENU(ledSettingMenu),
      SUBMENU(networkMenu),
      SUBMENU(versionInfoMenu),
-      EXIT("<Back"));
+     EXIT("<Back"));
 
 /*
 
-MENU(mainMenu, "Main menu", doNothing, noEvent, wrapStyle, 
+MENU(mainMenu, "Main menu", doNothing, noEvent, wrapStyle,
      SUBMENU(waterTanksMenu),
      SUBMENU(dateTimeMenu),
 
      OP("Op1", action1, anyEvent), OP("Op2", action2, enterEvent),
-     FIELD(brightnessValue, "Brightness", "%", 0, 100, 5, 5, adjustBrightness, enterEvent, wrapStyle), 
+     FIELD(brightnessValue, "Brightness", "%", 0, 100, 5, 5, adjustBrightness, enterEvent, wrapStyle),
 
      ,
-     SUBMENU(selMenu), SUBMENU(chooseMenu), 
+     SUBMENU(selMenu), SUBMENU(chooseMenu),
      OP("Alert test", doAlert, enterEvent), EXIT("<Back"));
 
-*/     
+*/
 
-
-
-//define output device
+// define output device
 idx_t serialTops[MAX_DEPTH] = {0};
 serialOut outSerial(Serial, serialTops);
 
-//describing a menu output device without macros
-//define at least one panel for menu output
-// const panel panels[] MEMMODE = {{0, 0, gfxWidth / fontX, gfxHeight / fontY}};
-// navNode* nodes[sizeof(panels) / sizeof(panel)]; //navNodes to store navigation status
-// panelsList pList(panels, nodes, 1); //a list of panels and nodes
-// idx_t tops[MAX_DEPTH] = {0, 0}; //store cursor positions for each level
-// SSD1306Out outOLED(&display, tops, pList, fontX, fontY+1); //oled output device menu driver
-// menuOut* constMEM outputs[] MEMMODE = {&outOLED, &outSerial}; //list of output devices
-// outputsList out(outputs, sizeof(outputs) / sizeof(menuOut*)); //outputs list
-
+// describing a menu output device without macros
+// define at least one panel for menu output
+//  const panel panels[] MEMMODE = {{0, 0, gfxWidth / fontX, gfxHeight / fontY}};
+//  navNode* nodes[sizeof(panels) / sizeof(panel)]; //navNodes to store navigation status
+//  panelsList pList(panels, nodes, 1); //a list of panels and nodes
+//  idx_t tops[MAX_DEPTH] = {0, 0}; //store cursor positions for each level
+//  SSD1306Out outOLED(&display, tops, pList, fontX, fontY+1); //oled output device menu driver
+//  menuOut* constMEM outputs[] MEMMODE = {&outOLED, &outSerial}; //list of output devices
+//  outputsList out(outputs, sizeof(outputs) / sizeof(menuOut*)); //outputs list
 
 // build a map of keys to menu commands
 // keyMap joystickBtn_map[] = {
@@ -349,7 +397,7 @@ serialOut outSerial(Serial, serialTops);
 
 //{0,0,14,8},{14,0,14,8}
 //{0, 0, gfxWidth / fontX, gfxHeight / fontY}
-MENU_OUTPUTS(out, MAX_DEPTH, ADAGFX_OUT(display, colors, fontX, fontY, {0, 0, gfxWidth / fontX, gfxHeight / (fontY+1)}), SERIAL_OUT(Serial));
+MENU_OUTPUTS(out, MAX_DEPTH, ADAGFX_OUT(display, colors, fontX, fontY, {0, 0, gfxWidth / fontX, gfxHeight / (fontY + 1)}), SERIAL_OUT(Serial));
 serialIn serial(Serial);
 NAVROOT(nav, mainMenu, MAX_DEPTH, serial, out);
 
@@ -401,23 +449,28 @@ void menuSetup()
 void menuLoop()
 {
     nav.doInput();
-    if (applicationState.buttonClick){
+    if (applicationState.buttonClick)
+    {
         nav.doNav(navCmd(enterCmd));
     }
-    if (applicationState.buttonLeft){
+    if (applicationState.buttonLeft)
+    {
         nav.doNav(navCmd(leftCmd));
     }
 
-    if (applicationState.buttonUp){
+    if (applicationState.buttonUp)
+    {
         nav.doNav(navCmd(upCmd));
     }
-    if (applicationState.buttonDown){
+    if (applicationState.buttonDown)
+    {
         nav.doNav(navCmd(downCmd));
     }
-    if (applicationState.buttonRight){
+    if (applicationState.buttonRight)
+    {
         nav.doNav(navCmd(rightCmd));
     }
-     
+
     if (nav.changed(0))
     { // only draw if changed
         // display.clearDisplay();

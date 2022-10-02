@@ -14,12 +14,14 @@ private:
     void _turnOnSound();
 
 public:
-    bool enabled = false;
+    bool isEnabled = false;
     BuzzerDevice();
     void init();
     void loop();
     void turnOn(char count = 1);
     void turnOff();
+    void load();
+    void save();
 };
 
 #endif
