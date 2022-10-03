@@ -90,27 +90,33 @@ result internalLedOff()
     return proceed;
 }
 
-result resetWaterBottle1()
+result resetWaterBottle1(eventMask e)
 {
     waterBottle1.reset();
+    return proceed;
+}
+
+result saveWaterBottle1(eventMask e)
+{
+    waterBottle1.save();
     return proceed;
 }
 
 // ----------------- Water bottles
 TOGGLE(waterBottle1.enabled, WaterBottle1OnOff, "Enabled: ", doNothing, noEvent, wrapStyle, VALUE("Off", false, doNothing, noEvent), VALUE("On", true, doNothing, noEvent));
 
-MENU(tank1Menu, "Bottle1", showEvent, anyEvent, wrapStyle,
+MENU(tank1Menu, "Bottle1", doNothing, noEvent, wrapStyle,
      SUBMENU(WaterBottle1OnOff),
      FIELD(waterBottle1.capacity, "Capacity", "ml", 10, 99999, 10, 1, doNothing, noEvent, wrapStyle),
      FIELD(waterBottle1.value, "Left", "ml", 0, 99999, 10, 1, doNothing, noEvent, wrapStyle),
-
+     OP("Save", saveWaterBottle1, enterEvent),
      OP("Reset", resetWaterBottle1, enterEvent),
      EXIT("<Back"));
-// MENU(tank2Menu, "B2", showEvent, anyEvent, wrapStyle,  FIELD(WaterBottle2.capacity, "Capacity", "ml", 10, 9999, 10, 1, doNothing, enterEvent, wrapStyle),     EXIT("<Back"));
+// MENU(tank2Menu, "B2", doNothing, anyEvent, wrapStyle,  FIELD(WaterBottle2.capacity, "Capacity", "ml", 10, 9999, 10, 1, doNothing, enterEvent, wrapStyle),     EXIT("<Back"));
 
 // SUBMENU(tank2Menu),
 
-MENU(WaterBottlesMenu, "Water bottles", showEvent, anyEvent, wrapStyle,
+MENU(WaterBottlesMenu, "Water bottles", doNothing, noEvent, wrapStyle,
      SUBMENU(tank1Menu),
      EXIT("<Back"));
 // ---------
@@ -154,10 +160,10 @@ public:
     }
 };
 
-MENU(dateTimeMenu, "Date/Time", showEvent, anyEvent, wrapStyle,
-     altOP(DatePrompt, "", doNothing, anyEvent),
-     altOP(TimePrompt, "", doNothing, anyEvent),
-     OP("Time zone: +3", action1, anyEvent),
+MENU(dateTimeMenu, "Date/Time", doNothing, noEvent, wrapStyle,
+     altOP(DatePrompt, "", doNothing, noEvent),
+     altOP(TimePrompt, "", doNothing, noEvent),
+     OP("Time zone: +3", doNothing, noEvent),
      EXIT("<Back"));
 // --------
 
@@ -180,6 +186,11 @@ result pump1EmergencyStop(eventMask e)
 result pump1calibration(eventMask e)
 {
     pumpController1.startCalibration();
+    return proceed;
+}
+result pump1Save(eventMask e)
+{
+    pumpController1.save();
     return proceed;
 }
 
@@ -241,22 +252,23 @@ public:
 TOGGLE(pumpController1isEnabled, pumpController1OnOff, "Enabled: ", pump1SyncEnabled, activateEvent, wrapStyle, VALUE("Off", false, pump1Disabled, enterEvent), VALUE("On", true, pump1Enabled, enterEvent));
 TOGGLE(pumpController1.isInverted, pumpController1Invert, "Dir: ", doNothing, noEvent, wrapStyle, VALUE("Right", false, doNothing, noEvent), VALUE("Left", true, doNothing, noEvent));
 
-//FIELD(pumpController1.speedMlPerMs, "Speed", "ml/sec", 1, 255, 1, 1, doNothing, enterEvent, wrapStyle),
-MENU(pumpController1CalibrationMenu, "Calibration", showEvent, anyEvent, wrapStyle,
+// FIELD(pumpController1.speedMlPerMs, "Speed", "ml/sec", 1, 255, 1, 1, doNothing, enterEvent, wrapStyle),
+MENU(pumpController1CalibrationMenu, "Calibration", doNothing, noEvent, wrapStyle,
      OP("Start 100 sec calibration", pump1calibration, enterEvent),
-     BARFIELD(pumpController1.power, "Power", "%", 1, 255, 10, 1, doNothing, enterEvent, wrapStyle),
+     BARFIELD(pumpController1.power, "Power", "%", 1, 255, 10, 1, doNothing, noEvent, wrapStyle),
      OP("Stop pump", pump1Stop, enterEvent),
      OP("Start pump", pump1Start, enterEvent),
-     altOP(PumpSpeedPrompt, "", doNothing, anyEvent),
-     FIELD(pumpController1.calibration100SecMl, "Water per 100sec", "ml", 1, 999, 10, 1, doNothing, enterEvent, wrapStyle),
+     altOP(PumpSpeedPrompt, "", doNothing, noEvent),
+     FIELD(pumpController1.calibration100SecMl, "Water per 100sec", "ml", 1, 999, 10, 1, doNothing, noEvent, wrapStyle),
      OP("Finish calibration", pump1FinishCalib, enterEvent),
+     OP("Save", pump1Save, enterEvent),
      EXIT("<Back"));
 
 // custom field print
 // implementing a customized menu component
 // this numeric field prints formatted number with leading zeros
 template <typename T>
-class leadsField : public menuField<T>
+class IntervalField : public menuField<T>
 {
 public:
     using menuField<T>::menuField;
@@ -283,50 +295,51 @@ public:
     }
 };
 
-MENU(pumpController1Menu, "Pump1", showEvent, anyEvent, wrapStyle,
+MENU(pumpController1Menu, "Pump1", doNothing, noEvent, wrapStyle,
      SUBMENU(pumpController1OnOff),
-     altOP(PumpModePrompt, "", doNothing, anyEvent),
+     altOP(PumpModePrompt, "", doNothing, noEvent),
      FIELD(pumpController1.mlAtTime, "Count", "ml", 10, 999, 10, 1, doNothing, enterEvent, wrapStyle),
-     altFIELD(leadsField, pumpController1.tmrAction.duration, "Interval", "", 60, 31 * 24 * 60 * 60, 5 * 60, 60, doNothing, enterEvent, wrapStyle),
+     altFIELD(IntervalField, pumpController1.tmrAction.duration, "Interval", "", 60, 31 * 24 * 60 * 60, 5 * 60, 60, doNothing, noEvent, wrapStyle),
 
      OP("Stop pump", pump1Stop, enterEvent),
      OP("Start pump", pump1Start, enterEvent),
      OP("Emergency Stop", pump1EmergencyStop, enterEvent),
      SUBMENU(pumpController1CalibrationMenu),
      SUBMENU(pumpController1Invert),
+     OP("Save", pump1Save, enterEvent),
      EXIT("<Back"));
 
-MENU(dispensersMenu, "Dispensers", showEvent, anyEvent, wrapStyle,
+MENU(dispensersMenu, "Dispensers", doNothing, noEvent, wrapStyle,
      SUBMENU(pumpController1Menu),
      EXIT("<Back"));
 // --------
 
 // ------------ Notification
-MENU(notificationMenu, "Notification[STUB]", showEvent, anyEvent, wrapStyle,
-     OP("On/Off", action1, anyEvent),
+MENU(notificationMenu, "Notification[STUB]", doNothing, noEvent, wrapStyle,
+     OP("On/Off", action1, noEvent),
      EXIT("<Back"));
 // --------
 // ------------ Buzzer
 TOGGLE(buzzerDevice.isEnabled, buzzerOnOff, "Enabled: ", doNothing, noEvent, wrapStyle, VALUE("Off", false, doNothing, noEvent), VALUE("On", true, doNothing, noEvent));
-MENU(buzzerSettingMenu, "Buzzer", showEvent, anyEvent, wrapStyle,
+MENU(buzzerSettingMenu, "Buzzer", doNothing, noEvent, wrapStyle,
      SUBMENU(buzzerOnOff),
-     OP("DoNotDisturb", action1, anyEvent),
+     OP("DoNotDisturb", doNothing, noEvent),
      EXIT("<Back"));
 // --------
 // ------------ LED
 TOGGLE(ledDevice.enabled, ledOnOff, "Enabled: ", doNothing, noEvent, wrapStyle, VALUE("Off", false, doNothing, noEvent), VALUE("On", true, doNothing, noEvent));
-MENU(ledSettingMenu, "LED", showEvent, anyEvent, wrapStyle,
+MENU(ledSettingMenu, "LED", doNothing, noEvent, wrapStyle,
      SUBMENU(ledOnOff),
      EXIT("<Back"));
 // --------
 // --------------- Network
-MENU(networkMenu, "Network[STUB]", showEvent, anyEvent, wrapStyle,
-     OP("WiFi", action1, anyEvent),
-     OP("Telegram", action1, anyEvent),
-     OP("MQTT", action1, anyEvent),
+MENU(networkMenu, "Network[STUB]", doNothing, noEvent, wrapStyle,
+     OP("WiFi", doNothing, noEvent),
+     OP("Telegram", doNothing, noEvent),
+     OP("MQTT", doNothing, noEvent),
      EXIT("<Back"));
 // --------- Version & info
-MENU(versionInfoMenu, "Version & info[STUB]", showEvent, anyEvent, wrapStyle,
+MENU(versionInfoMenu, "Version & info[STUB]", doNothing, noEvent, wrapStyle,
      OP(VERSION, doNothing, noEvent),
      OP(BUILD_TIMESTAMP, doNothing, noEvent),
      EXIT("<Back"));
@@ -351,11 +364,11 @@ TOGGLE(ledCtrl, setLed, "Led: ", doNothing, noEvent, wrapStyle //,doExit,enterEv
        VALUE("Off", LOW, ledOff, enterEvent) // ledOff function is called
 );
 
-int selTest = 0;
-SELECT(selTest, selMenu, "Select", doNothing, noEvent, wrapStyle, VALUE("Zero", 0, doNothing, noEvent), VALUE("One", 1, doNothing, noEvent), VALUE("Two", 2, doNothing, noEvent));
+// int selTest = 0;
+// SELECT(selTest, selMenu, "Select", doNothing, noEvent, wrapStyle, VALUE("Zero", 0, doNothing, noEvent), VALUE("One", 1, doNothing, noEvent), VALUE("Two", 2, doNothing, noEvent));
 
-int chooseTest = -1;
-CHOOSE(chooseTest, chooseMenu, "Choose", doNothing, noEvent, wrapStyle, VALUE("First", 1, doNothing, noEvent), VALUE("Second", 2, doNothing, noEvent), VALUE("Third", 3, doNothing, noEvent), VALUE("Last", -1, doNothing, noEvent));
+// int chooseTest = -1;
+// CHOOSE(chooseTest, chooseMenu, "Choose", doNothing, noEvent, wrapStyle, VALUE("First", 1, doNothing, noEvent), VALUE("Second", 2, doNothing, noEvent), VALUE("Third", 3, doNothing, noEvent), VALUE("Last", -1, doNothing, noEvent));
 
 // MENU(subMenu, "Sub-Menu", showEvent, anyEvent, wrapStyle, OP("Sub1", showEvent, anyEvent), OP("Sub2", showEvent, anyEvent),
 // OP("Sub3", showEvent, anyEvent), altOP(altPrompt, "", showEvent, anyEvent), EXIT("<Back"));

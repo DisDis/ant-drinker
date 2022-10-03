@@ -42,7 +42,7 @@ private:
 public:
     // Как часто? (1мин .. 1день ... 1 неделя .. 2х недель)
     DateTimeTimer tmrAction = DateTimeTimer();
-    inline bool getEnabled(){ return _enabled;}
+    inline bool getEnabled() { return _enabled; }
     void setEnabled(bool newValue);
     // Сколько нужно мл за 1 раз
     float mlAtTime = 10.0;
@@ -53,9 +53,17 @@ public:
     float speedMlPerMs = 1.0;
     // 0..255 [1-100%]
     unsigned char power = 255;
-        // Сколько мл получилось при калибровке(100 секунд)
+    // Сколько мл получилось при калибровке(100 секунд)
     float calibration100SecMl = 100.0;
-
+    float getWorkPercent()
+    {
+        unsigned long tmp = tmrWork.getActuallyPassed();
+        if (tmp > tmrWork.getDuration())
+        {
+            tmp = tmrWork.getDuration();
+        }
+        return ((float)tmp) / ((float)tmrWork.getDuration());
+    }
     PumpController(const char *id, Pump *pump, ON_FINISH_WORK_CALLBACK finishWorkCallback);
     PumpMode calculateMode();
     inline PumpMode getMode() { return mode; };

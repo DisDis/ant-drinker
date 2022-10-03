@@ -125,7 +125,7 @@ void setup()
   // Serial port for debugging purposes
   Serial.begin(500000);
   Serial.println(SEPARATE_LINE);
-  Serial.printf("Project version v%s, built %s\n",VERSION,BUILD_TIMESTAMP);
+  Serial.printf("Project version v%s, built %s\n", VERSION, BUILD_TIMESTAMP);
   Serial.println("Init system:");
   displayDevice.init();
 #ifdef SKIP_INIT_ALL
@@ -189,6 +189,11 @@ void loopMainPage()
   strftime(output, 80, DATETIME_FORMAT, &timeinfo);
   display.println(output);
   display.drawBitmap(64, 0, splash_Logo_bits, Splash_Logo_width, Splash_Logo_height, 1);
+  if (pumpController1.getMode() == WorkingMode)
+  {
+    display.drawRect(1, SCREEN_HEIGHT - 5, SCREEN_WIDTH - 2, 4, WHITE);
+    display.fillRect(2, SCREEN_HEIGHT - 4, (SCREEN_WIDTH - 2) * pumpController1.getWorkPercent(), 2, WHITE);
+  }
   display.display();
 }
 
