@@ -16,7 +16,7 @@
 #include <Wire.h>
 
 #include <Adafruit_GFX.h>
-#include <Adafruit_SSD1306.h>
+// #include <Adafruit_SSD1306.h>
 
 #include <Preferences.h>
 #include "wificfg.h"
@@ -69,6 +69,7 @@ void providePump2(unsigned long ml)
 
 //
 TimerMs tmrButtons(150, 1, 0);
+TimerMs mainScreen(1000, 1, 0);
 
 // Initialize SPIFFS
 void initSPIFFS()
@@ -84,11 +85,11 @@ void initSPIFFS()
 void initButtons()
 {
   Serial.print("  buttons...");
-  pinMode(ButtonClickPin, INPUT_PULLDOWN);
-  pinMode(ButtonLeftPin, INPUT_PULLDOWN);
-  pinMode(ButtonRightPin, INPUT_PULLDOWN);
-  pinMode(ButtonUpPin, INPUT_PULLDOWN);
-  pinMode(ButtonDownPin, INPUT_PULLDOWN);
+  pinMode(ButtonClickPin, INPUT_PULLUP);
+  pinMode(ButtonLeftPin, INPUT_PULLUP);
+  pinMode(ButtonRightPin, INPUT_PULLUP);
+  pinMode(ButtonUpPin, INPUT_PULLUP);
+  pinMode(ButtonDownPin, INPUT_PULLUP);
   tmrButtons.setPeriodMode();
   Serial.println("OK");
 }
@@ -175,10 +176,13 @@ void loopMainPage()
   {
     applicationState.currentPage = menuPage;
   }
-
-  display.clearDisplay();
+  if (!mainScreen.tick()){
+    return;
+  }
+  display.fillScreen(ST7735_BLACK);
+  display.drawBitmap( 64, SCREEN_HEIGHT - Splash_Logo_height, splash_Logo_bits, Splash_Logo_width, Splash_Logo_height, ST7735_WHITE);
   display.setTextSize(1);
-  display.setTextColor(WHITE);
+  display.setTextColor(ST7735_WHITE);
   display.setCursor(0, 0);
   display.printf("T:%.1f H:%.1f", sensorDevices.currentTemperature, sensorDevices.currentHumidity);
   display.println();
@@ -188,13 +192,11 @@ void loopMainPage()
   localtime_r(&now, &timeinfo);
   strftime(output, 80, DATETIME_FORMAT, &timeinfo);
   display.println(output);
-  display.drawBitmap(64, 0, splash_Logo_bits, Splash_Logo_width, Splash_Logo_height, 1);
   if (pumpController1.getMode() == WorkingMode)
   {
-    display.drawRect(1, SCREEN_HEIGHT - 5, SCREEN_WIDTH - 2, 4, WHITE);
-    display.fillRect(2, SCREEN_HEIGHT - 4, (SCREEN_WIDTH - 2) * pumpController1.getWorkPercent(), 2, WHITE);
+    display.drawRect(1, SCREEN_HEIGHT - 5, SCREEN_WIDTH - 2, 4, ST7735_WHITE);
+    display.fillRect(2, SCREEN_HEIGHT - 4, (SCREEN_WIDTH - 2) * pumpController1.getWorkPercent(), 2, ST7735_RED);
   }
-  display.display();
 }
 
 void loopMenuPage()

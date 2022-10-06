@@ -3,20 +3,26 @@
 #define _Display_h_
 
 #include <Adafruit_GFX.h>
-#include <Adafruit_SSD1306.h>
+// #include <Adafruit_SSD1306.h>
+#include <Adafruit_ST7735.h>
 #include "config.h"
-#include <Wire.h>
+#include <SPI.h>
 
-// for 128x64 displays:
-extern Adafruit_SSD1306 display;
+#define TFT_CS 5
+#define TFT_RST 16
+#define TFT_DC 17
 
+extern Adafruit_ST7735 display;
+void drawImage(int16_t x, int16_t y, const uint16_t *bitmap, int16_t w,
+               int16_t h/*, uint16_t bg*/);
 
 class DisplayDevice
 {
 private:
-    ///default 5 min
-    unsigned long automaticScreenOffTimeMs = 5*60*1000; 
+    /// default 5 min
+    unsigned long automaticScreenOffTimeMs = 1 * 60 * 1000;
     void showSplashScreen();
+
 public:
     DisplayDevice();
     void init();

@@ -5,7 +5,6 @@
 #include "display.h"
 #include <menu.h>
 #include <menuIO/adafruitGfxOut.h>
-#include "SSD1306Out.h"
 #include <menuIO/serialOut.h>
 #include <menuIO/serialIO.h>
 // #include <menuIO/u8g2Out.h>
@@ -19,23 +18,26 @@
 //#include <menuIO/chainStream.h>
 using namespace Menu;
 
+#define ST7735_GRAY RGB565(128,128,128)
+
+// define menu colors --------------------------------------------------------
+//  {{disabled normal,disabled selected},{enabled normal,enabled selected, enabled editing}}
+//monochromatic color table
 // https://github.com/neu-rah/ArduinoMenu/blob/master/examples/targetSel/targetSel/targetSel.ino
 // define menu colors --------------------------------------------------------
 // each color is in the format:
 //  {{disabled normal,disabled selected},{enabled normal,enabled selected, enabled editing}}
 const colorDef<uint16_t> colors[6] MEMMODE = {
-    {{WHITE, BLACK}, {WHITE, BLACK, BLACK}}, // bgColor
-    {{BLACK, WHITE}, {BLACK, WHITE, WHITE}}, // fgColor
-    {{BLACK, WHITE}, {BLACK, WHITE, WHITE}}, // valColor
-    {{BLACK, WHITE}, {BLACK, WHITE, WHITE}}, // unitColor
-    {{BLACK, WHITE}, {WHITE, WHITE, WHITE}}, // cursorColor
-    {{BLACK, WHITE}, {WHITE, BLACK, BLACK}}, // titleColor
+  {{(uint16_t)ST7735_BLACK,(uint16_t)ST7735_BLACK}, {(uint16_t)ST7735_BLACK, (uint16_t)ST7735_BLUE,  (uint16_t)ST7735_BLUE}},//bgColor
+  {{(uint16_t)ST7735_GRAY, (uint16_t)ST7735_GRAY},  {(uint16_t)ST7735_WHITE, (uint16_t)ST7735_WHITE, (uint16_t)ST7735_WHITE}},//fgColor
+  {{(uint16_t)ST7735_WHITE,(uint16_t)ST7735_BLACK}, {(uint16_t)ST7735_YELLOW,(uint16_t)ST7735_YELLOW,(uint16_t)ST7735_RED}},//valColor
+  {{(uint16_t)ST7735_WHITE,(uint16_t)ST7735_BLACK}, {(uint16_t)ST7735_WHITE, (uint16_t)ST7735_YELLOW,(uint16_t)ST7735_YELLOW}},//unitColor
+  {{(uint16_t)ST7735_WHITE,(uint16_t)ST7735_GRAY},  {(uint16_t)ST7735_BLACK, (uint16_t)ST7735_BLUE,  (uint16_t)ST7735_WHITE}},//cursorColor
+  {{(uint16_t)ST7735_WHITE,(uint16_t)ST7735_YELLOW},{(uint16_t)ST7735_BLUE,  (uint16_t)ST7735_RED,   (uint16_t)ST7735_RED}},//titleColor
 };
 
-#define gfxWidth 128
-#define gfxHeight 64
 #define fontX 7
-#define fontY 9
+#define fontY 10
 
 // #define fontW 7
 // #define fontH 8
@@ -434,7 +436,7 @@ serialOut outSerial(Serial, serialTops);
 
 //{0,0,14,8},{14,0,14,8}
 //{0, 0, gfxWidth / fontX, gfxHeight / fontY}
-MENU_OUTPUTS(out, MAX_DEPTH, ADAGFX_OUT(display, colors, fontX, fontY, {0, 0, gfxWidth / fontX, gfxHeight / (fontY + 1)}), SERIAL_OUT(Serial));
+MENU_OUTPUTS(out, MAX_DEPTH, ADAGFX_OUT(display, colors, fontX, fontY, {0, 0, SCREEN_WIDTH / fontX, SCREEN_HEIGHT / fontY}), SERIAL_OUT(Serial));
 serialIn serial(Serial);
 NAVROOT(nav, mainMenu, MAX_DEPTH, serial, out);
 
@@ -510,9 +512,6 @@ void menuLoop()
 
     if (nav.changed(0))
     { // only draw if changed
-        // display.clearDisplay();
-        // display.setCursor(0,0);
         nav.doOutput();
-        display.display();
     }
 }

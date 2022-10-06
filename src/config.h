@@ -10,8 +10,8 @@
 #define SENSOR_T_H_PIN 26
 #define SENSOR_LOW_WATER 15
 
-#define SCREEN_WIDTH 128 // OLED display width, in pixels
-#define SCREEN_HEIGHT 64 // OLED display height, in pixels
+#define SCREEN_WIDTH 160 // OLED display width, in pixels
+#define SCREEN_HEIGHT 80 // OLED display height, in pixels
 
 #define RO_MODE true
 #define RW_MODE false
