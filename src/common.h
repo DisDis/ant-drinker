@@ -13,7 +13,6 @@
 #include "sensor_devices.h"
 #include "notifications.h"
 
-
 extern Preferences preferences;
 extern unsigned long currentMillis;
 extern BuzzerDevice buzzerDevice;
@@ -24,9 +23,11 @@ extern WaterBottle waterBottle2;
 extern WaterBottleController waterBottleController1;
 extern WaterBottleController waterBottleController2;
 extern Pump pump1;
-extern Pump pump2;
 extern PumpController pumpController1;
+#ifdef MOTORB_ENABLED
+extern Pump pump2;
 extern PumpController pumpController2;
+#endif
 extern LEDDevice ledDevice;
 extern SensorDevices sensorDevices;
 

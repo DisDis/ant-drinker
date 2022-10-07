@@ -186,6 +186,8 @@ void PumpController::init()
 {
     Serial.print("  PumpController...");
     Serial.print("    ");
+    pinMode(MOTORS_ON_PIN, OUTPUT);
+    digitalWrite(MOTORS_ON_PIN, HIGH);
     load();
     Serial.println("    OK");
 }

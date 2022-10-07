@@ -51,12 +51,18 @@ WaterBottle waterBottle1("B1");
 WaterBottle waterBottle2("B2");
 WaterBottleController waterBottleController1(&waterBottle1);
 WaterBottleController waterBottleController2(&waterBottle2);
-Pump pump1(MOTORA_PWM_PIN, MOTORA_DIR0_PIN, MOTORA_DIR1_PIN);
-Pump pump2(MOTORB_PWM_PIN, MOTORB_DIR0_PIN, MOTORB_DIR1_PIN);
+
 extern void providePump1(unsigned long ml);
 extern void providePump2(unsigned long ml);
+
+Pump pump1(MOTORA_PWM_PIN, 0, MOTORA_DIR0_PIN, MOTORA_DIR1_PIN);
 PumpController pumpController1(PUMP1_ID, &pump1, providePump1);
+
+#ifdef MOTORB_ENABLED
+extern Pump pump2;
+Pump pump2(MOTORB_PWM_PIN, 1, MOTORB_DIR0_PIN, MOTORB_DIR1_PIN);
 PumpController pumpController2(PUMP2_ID, &pump2, providePump2);
+#endif
 
 void providePump1(unsigned long ml)
 {
@@ -115,9 +121,11 @@ void initPumps()
   Serial.print("  Pumps...");
 
   pump1.init();
-  pump2.init();
   pumpController1.init();
+  #ifdef MOTORB_ENABLED
+  pump2.init();
   pumpController2.init();
+  #endif
   Serial.println("OK");
 }
 
@@ -181,7 +189,7 @@ void loopMainPage()
   {
     return;
   }
-  display.fillRect(0, 0, SCREEN_WIDTH, 64, ST7735_BLACK);
+  display.fillScreen(ST7735_BLACK);
   display.drawBitmap(64, SCREEN_HEIGHT - Splash_Logo_height, splash_Logo_bits, Splash_Logo_width, Splash_Logo_height, ST7735_WHITE);
   display.setTextSize(1);
   display.setTextColor(ST7735_WHITE);
@@ -326,7 +334,10 @@ void loop()
   sensorDevices.poll();
   globalTime.loop();
   pumpController1.execute();
+  #ifdef MOTORB_ENABLED
   pumpController2.execute();
+  #endif
   waterBottleController1.execute();
   waterBottleController2.execute();
+  displayDevice.swapBuffer();
 }

@@ -1,4 +1,4 @@
-#include "Adafruit_ST7735.h"
+#include "Adafruit_ST7735_DoubleBuffer.h"
 #include "Adafruit_ST77xx.h"
 
 // CONSTRUCTORS ************************************************************
@@ -362,3 +362,235 @@ void Adafruit_ST7735::setRotation(uint8_t m) {
 
   sendCommand(ST77XX_MADCTL, &madctl, 1);
 }
+
+//XTronical additions
+#ifdef SCREEN_BUFFER
+
+void Adafruit_ST7735::displayBuffer(int16_t x, int16_t y, int16_t w,int16_t h) {
+  int16_t byteWidth = (ST7735_TFTWIDTH + 7) / 8; // Bitmap scanline pad = whole byte
+  uint8_t byte = 0;
+  startWrite();
+  setAddrWindow(x, y, w, h); // Clipped area
+  for (int16_t y2 = 0; y2 < h; y2++) {
+	  uint16_t pcolors[ST7735_TFTHEIGHT]; //hard coding this for now..
+	  for (int16_t x2 = 0; x2 < w; x2++) {
+	  	  pcolors[x2]=  ScreenBuffer[(y+y2) * ST7735_TFTWIDTH + (x2+x)];  		  
+	  }
+	  writePixels(pcolors, w);
+  }
+  
+
+  /*
+  startWrite();
+  for (int16_t y2 = 0; y2 < h; y2++) {
+	  for (int16_t x2 = 0; x2 < w; x2++) {
+  		drawPixel(x + x2, y + y2, ScreenBuffer[(y+y2) * ST7735_TFTWIDTH + (x2+x)]);
+	  }
+  }
+  
+  
+  /*
+  for (int16_t j = 0; j < h; j++, y++) {
+    for (int16_t i = 0; i < w; i++) {
+    	drawPixel(x + i, y, ScreenBuffer[(y+j) * ST7735_TFTWIDTH + (i+x)]);
+      //writePixel(x + i, y, ScreenBuffer[j * ST7735_TFTWIDTH + i]);
+    }
+  }*/
+  
+  endWrite();
+  
+}
+
+void Adafruit_ST7735::writePixel(int16_t x, int16_t y, uint16_t color) {
+  int index = y * ST7735_TFTWIDTH + x;
+  if ( index < ST7735_TFTWIDTH * ST7735_TFTHEIGHT && index > 0) {
+    ScreenBuffer[y * ST7735_TFTWIDTH + x] = color;
+  }
+  //drawPixel(x, y, color);
+}
+
+
+/**************************************************************************/
+/*!
+   @brief    Write a line.  Bresenham's algorithm - thx wikpedia
+    @param    x0  Start point x coordinate
+    @param    y0  Start point y coordinate
+    @param    x1  End point x coordinate
+    @param    y1  End point y coordinate
+    @param    color 16-bit 5-6-5 Color to draw with
+*/
+/**************************************************************************/
+void Adafruit_ST7735::writeLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1,
+                             uint16_t color) {
+#if defined(ESP8266)
+  yield();
+#endif
+  int16_t steep = abs(y1 - y0) > abs(x1 - x0);
+  if (steep) {
+    _swap_int16_t(x0, y0);
+    _swap_int16_t(x1, y1);
+  }
+
+  if (x0 > x1) {
+    _swap_int16_t(x0, x1);
+    _swap_int16_t(y0, y1);
+  }
+
+  int16_t dx, dy;
+  dx = x1 - x0;
+  dy = abs(y1 - y0);
+
+  int16_t err = dx / 2;
+  int16_t ystep;
+
+  if (y0 < y1) {
+    ystep = 1;
+  } else {
+    ystep = -1;
+  }
+
+  for (; x0 <= x1; x0++) {
+    if (steep) {
+      //writePixel(y0, x0, color);
+      // ScreenBuffer[y0 * 80/*ST7735_TFTWIDTH*/ + x0] = color;
+      drawPixel(y0, x0, color);
+    } else {
+      //writePixel(x0, y0, color);
+      // ScreenBuffer[x0 * 80/*ST7735_TFTHEIGHT*/ + y0] = color;
+      drawPixel(x0, y0, color);
+    }
+    err -= dy;
+    if (err < 0) {
+      y0 += ystep;
+      err += dx;
+    }
+  }
+}
+
+/**************************************************************************/
+/*!
+    @brief  Draw a pixel to the canvas framebuffer
+    @param  x   x coordinate
+    @param  y   y coordinate
+    @param  color 16-bit 5-6-5 Color to fill with
+*/
+/**************************************************************************/
+void Adafruit_ST7735::drawPixel(int16_t x, int16_t y, uint16_t color) {
+    if ((x < 0) || (y < 0) || (x >= _width) || (y >= _height))
+      return;
+
+    int16_t t;
+    switch (rotation) {
+    case 1:
+      t = x;
+      x = WIDTH - 1 - y;
+      y = t;
+      break;
+    case 2:
+      x = WIDTH - 1 - x;
+      y = HEIGHT - 1 - y;
+      break;
+    case 3:
+      t = x;
+      x = y;
+      y = HEIGHT - 1 - t;
+      break;
+    }
+
+    ScreenBuffer[x*HEIGHT + y] = color;
+}
+
+
+/**************************************************************************/
+/*!
+   @brief    Write a perfectly vertical line, overwrite in subclasses if
+   startWrite is defined!
+    @param    x   Top-most x coordinate
+    @param    y   Top-most y coordinate
+    @param    h   Height in pixels
+   @param    color 16-bit 5-6-5 Color to fill with
+*/
+/**************************************************************************/
+void Adafruit_ST7735::writeFastVLine(int16_t x, int16_t y, int16_t h,
+                                  uint16_t color) {
+  // Overwrite in subclasses if startWrite is defined!
+  // Can be just writeLine(x, y, x, y+h-1, color);
+  // or writeFillRect(x, y, 1, h, color);
+  drawFastVLine(x, y, h, color);
+}
+
+/**************************************************************************/
+/*!
+   @brief    Write a perfectly horizontal line, overwrite in subclasses if
+   startWrite is defined!
+    @param    x   Left-most x coordinate
+    @param    y   Left-most y coordinate
+    @param    w   Width in pixels
+   @param    color 16-bit 5-6-5 Color to fill with
+*/
+/**************************************************************************/
+void Adafruit_ST7735::writeFastHLine(int16_t x, int16_t y, int16_t w,
+                                  uint16_t color) {
+  // Overwrite in subclasses if startWrite is defined!
+  // Example: writeLine(x, y, x+w-1, y, color);
+  // or writeFillRect(x, y, w, 1, color);
+  drawFastHLine(x, y, w, color);
+}
+
+
+void Adafruit_ST7735::writeFillRect(int16_t x, int16_t y, int16_t w, int16_t h,
+                                 uint16_t color) {
+  // Overwrite in subclasses if desired!
+  fillRect(x, y, w, h, color);
+}
+
+/**************************************************************************/
+/*!
+   @brief    Draw a perfectly vertical line (this is often optimized in a
+   subclass!)
+    @param    x   Top-most x coordinate
+    @param    y   Top-most y coordinate
+    @param    h   Height in pixels
+   @param    color 16-bit 5-6-5 Color to fill with
+*/
+/**************************************************************************/
+void Adafruit_ST7735::drawFastVLine(int16_t x, int16_t y, int16_t h,
+                                 uint16_t color) {
+  writeLine(x, y, x, y + h - 1, color);
+}
+
+/**************************************************************************/
+/*!
+   @brief    Draw a perfectly horizontal line (this is often optimized in a
+   subclass!)
+    @param    x   Left-most x coordinate
+    @param    y   Left-most y coordinate
+    @param    w   Width in pixels
+   @param    color 16-bit 5-6-5 Color to fill with
+*/
+/**************************************************************************/
+void Adafruit_ST7735::drawFastHLine(int16_t x, int16_t y, int16_t w,
+                                 uint16_t color) {
+  // startWrite();
+  writeLine(x, y, x + w - 1, y, color);
+  // endWrite();
+}
+
+// fill a rectangle
+void Adafruit_ST7735::fillRect(int16_t x, int16_t y, int16_t w, int16_t h,uint16_t color) {
+  // rudimentary clipping (drawChar w/big text requires this)
+  if((x >= _width) || (y >= _height)) return;
+  if((x + w - 1) >= _width)  w = _width  - x;
+  if((y + h - 1) >= _height) h = _height - y;
+  
+  #ifdef SCREEN_BUFFER
+    int StartX=x-1;
+    int StartY=y-1;
+	  for(y=StartY+h; y>=StartY; y--) 
+      for(x=StartX+w; x>=StartX; x--)
+        writePixel(x,y,color);
+  #endif
+}
+
+#endif
+//end XTronical additions

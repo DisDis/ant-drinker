@@ -68,13 +68,14 @@ void DisplayDevice::init()
     display.enableTearing(false);
     display.fillScreen(ST77XX_BLACK);
     showSplashScreen();
+    display.displayBuffer(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
 }
 
 void DisplayDevice::showSplashScreen()
 {
     Serial.print("  Splash...");
     display.drawBitmap(64, SCREEN_HEIGHT - Splash_Logo_height, splash_Logo_bits, Splash_Logo_width, Splash_Logo_height, ST7735_WHITE);
-    //display.drawRGBBitmap();
+    // display.drawRGBBitmap();
     display.setCursor(0, 0);
     display.printf("v%s, %s", VERSION, BUILD_TIMESTAMP);
 
@@ -115,4 +116,8 @@ void DisplayDevice::turnOn(void)
 void DisplayDevice::turnOff(void)
 {
     display.enableDisplay(false);
+}
+void DisplayDevice::swapBuffer()
+{
+    display.displayBuffer(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
 }

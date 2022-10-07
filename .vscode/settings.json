@@ -16,6 +16,7 @@
         "regex": "cpp",
         "bitset": "cpp",
         "cstdlib": "cpp",
-        "functional": "cpp"
+        "functional": "cpp",
+        "random": "cpp"
     }
 }

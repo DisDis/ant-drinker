@@ -16,7 +16,7 @@
 #define RO_MODE true
 #define RW_MODE false
 
-#define wifiSSIDKey "ssid" 
+#define wifiSSIDKey "ssid"
 #define wifiPassKey "pass"
 
 #define wifiConfigKey "credentials"
@@ -27,23 +27,27 @@
 #define PUMP1_ID "pump1"
 #define PUMP2_ID "pump2"
 
-#define ButtonClickPin 34
-#define ButtonLeftPin 35
+#define ButtonClickPin 25
+#define ButtonLeftPin 32
 #define ButtonRightPin 33
-#define ButtonUpPin 32
-#define ButtonDownPin 25
+#define ButtonUpPin 34
+#define ButtonDownPin 35
 
-#define MOTORA_PWM_PIN 31
-#define MOTORA_DIR0_PIN 29
-#define MOTORA_DIR1_PIN 30
+//#define MOTORB_ENABLED
 
-#define MOTORB_PWM_PIN 25
-#define MOTORB_DIR0_PIN 27
-#define MOTORB_DIR1_PIN 26
+#define MOTORA_PWM_PIN 12
+#define MOTORA_DIR0_PIN 0
+#define MOTORA_DIR1_PIN 14
 
-#define MOTORS_ON_PIN 28
+#ifdef MOTORB_ENABLED
+ #define MOTORB_PWM_PIN 1
+ #define MOTORB_DIR0_PIN 19
+ #define MOTORB_DIR1_PIN 3
+#endif
 
-#define BUZZER_PIN 24
+#define MOTORS_ON_PIN 4
+
+#define BUZZER_PIN 2
 
 #define DATETIME_FORMAT "%d-%m-%y, %H:%M:%S"
 #define MENU_DATE_FORMAT "Date: %d-%m-%y"
@@ -52,9 +56,5 @@
 // Set LED GPIO
 #define LED_PIN 13
 #define LED_BUILTIN 16
-
-
-
-
 
 #endif

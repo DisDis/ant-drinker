@@ -1,5 +1,5 @@
-#ifndef _ADAFRUIT_ST7735H_
-#define _ADAFRUIT_ST7735H_
+#ifndef _ADAFRUIT_ST7735H_DOUBLE_
+#define _ADAFRUIT_ST7735H_DOUBLE_
 
 #include "Adafruit_ST77xx.h"
 
@@ -47,8 +47,17 @@
 #define ST7735_YELLOW ST77XX_YELLOW
 #define ST7735_ORANGE ST77XX_ORANGE
 
+#define SCREEN_BUFFER
+#define ST7735_TFTWIDTH 160
+#define ST7735_TFTHEIGHT 160
+
+#ifndef _swap_int16_t
+#define _swap_int16_t(a, b) { int16_t t = a; a = b; b = t; }
+#endif
+
 /// Subclass of ST77XX for ST7735B and ST7735R TFT Drivers:
-class Adafruit_ST7735 : public Adafruit_ST77xx {
+class Adafruit_ST7735 : public Adafruit_ST77xx
+{
 public:
   Adafruit_ST7735(int8_t cs, int8_t dc, int8_t mosi, int8_t sclk, int8_t rst);
   Adafruit_ST7735(int8_t cs, int8_t dc, int8_t rst);
@@ -62,9 +71,34 @@ public:
   void initR(uint8_t options = INITR_GREENTAB); // for ST7735R
 
   void setRotation(uint8_t m);
+  // XTronical Additions
+#ifdef SCREEN_BUFFER
+  void displayBuffer(int16_t x, int16_t y, int16_t w, int16_t h);
 
+  void writePixel(int16_t x, int16_t y, uint16_t color);
+  void writeLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1,
+                 uint16_t color);
+  void writeFastVLine(int16_t x, int16_t y, int16_t h,
+                      uint16_t color);
+  void writeFastHLine(int16_t x, int16_t y, int16_t w,
+                      uint16_t color);
+  void writeFillRect(int16_t x, int16_t y, int16_t w, int16_t h,
+                     uint16_t color);
+  void drawFastHLine(int16_t x, int16_t y, int16_t w,
+                     uint16_t color);
+  void drawFastVLine(int16_t x, int16_t y, int16_t h,
+                     uint16_t color);
+  void fillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color);
+  void drawPixel(int16_t x, int16_t y, uint16_t color);
+#endif
+  // End XTronical Additions
 private:
   uint8_t tabcolor;
+     // XTronical additions
+  #ifdef SCREEN_BUFFER
+  unsigned short ScreenBuffer[ST7735_TFTWIDTH*ST7735_TFTHEIGHT]; 
+  #endif
+  // End XTronical Additions
 };
 
 #endif // _ADAFRUIT_ST7735H_
