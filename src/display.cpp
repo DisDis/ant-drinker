@@ -21,22 +21,6 @@ DisplayDevice::DisplayDevice()
 {
 }
 
-void drawImage(int16_t x, int16_t y, const uint16_t *bitmap, int16_t w,
-               int16_t h /*, uint16_t bg*/)
-{
-    uint16_t row, col, buffidx = 0;
-    for (row = 0; row < h; row++)
-    { // For each scanline...
-        for (col = 0; col < w; col++)
-        { // For each pixel...
-            // To read from Flash Memory, pgm_read_XXX is required.
-            // Since image is stored as uint16_t, pgm_read_word is used as it uses 16bit address
-            display.drawPixel(x + col, y + row, pgm_read_word(bitmap + buffidx));
-            buffidx++;
-        } // end pixel
-    }
-}
-
 void DisplayDevice::init()
 {
     Serial.print("  display...");
@@ -71,6 +55,7 @@ void DisplayDevice::init()
     // OR use this initializer (uncomment) if using a 1.47" 174x320 TFT:
     // tft.init(174, 320);           // Init ST7789 174x320
     display.invertDisplay(1);
+    display.setSPISpeed(70000000);
     Serial.println("OK");
     // display.flipScreenVertically();
     // display.setContrast(255);
@@ -80,6 +65,7 @@ void DisplayDevice::init()
     display.setFont();
     display.setTextColor(ST77XX_WHITE);
     display.setRotation(3);
+    display.enableTearing(false);
     display.fillScreen(ST77XX_BLACK);
     showSplashScreen();
 }
@@ -87,8 +73,8 @@ void DisplayDevice::init()
 void DisplayDevice::showSplashScreen()
 {
     Serial.print("  Splash...");
-    // drawImage((SCREEN_WIDTH - Splash_Logo_width) / 2, 15, splash_Logo_bits, Splash_Logo_width, Splash_Logo_height);
     display.drawBitmap(64, SCREEN_HEIGHT - Splash_Logo_height, splash_Logo_bits, Splash_Logo_width, Splash_Logo_height, ST7735_WHITE);
+    //display.drawRGBBitmap();
     display.setCursor(0, 0);
     display.printf("v%s, %s", VERSION, BUILD_TIMESTAMP);
 

@@ -69,7 +69,7 @@ void providePump2(unsigned long ml)
 
 //
 TimerMs tmrButtons(150, 1, 0);
-TimerMs mainScreen(1000, 1, 0);
+TimerMs mainScreen(70, 1, 0);
 
 // Initialize SPIFFS
 void initSPIFFS()
@@ -160,6 +160,7 @@ void setup()
   Serial.println("System is initialized");
   Serial.println(SEPARATE_LINE);
   Serial.println();
+  display.fillScreen(ST7735_BLACK);
 }
 
 unsigned long previousMillis = 0;
@@ -176,11 +177,12 @@ void loopMainPage()
   {
     applicationState.currentPage = menuPage;
   }
-  if (!mainScreen.tick()){
+  if (!mainScreen.tick())
+  {
     return;
   }
-  display.fillScreen(ST7735_BLACK);
-  display.drawBitmap( 64, SCREEN_HEIGHT - Splash_Logo_height, splash_Logo_bits, Splash_Logo_width, Splash_Logo_height, ST7735_WHITE);
+  display.fillRect(0, 0, SCREEN_WIDTH, 64, ST7735_BLACK);
+  display.drawBitmap(64, SCREEN_HEIGHT - Splash_Logo_height, splash_Logo_bits, Splash_Logo_width, Splash_Logo_height, ST7735_WHITE);
   display.setTextSize(1);
   display.setTextColor(ST7735_WHITE);
   display.setCursor(0, 0);

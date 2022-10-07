@@ -20,7 +20,7 @@ class DisplayDevice
 {
 private:
     /// default 5 min
-    unsigned long automaticScreenOffTimeMs = 1 * 60 * 1000;
+    unsigned long automaticScreenOffTimeMs = 5 * 60 * 1000;
     void showSplashScreen();
 
 public:
