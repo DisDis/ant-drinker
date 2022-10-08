@@ -122,28 +122,64 @@ void initPumps()
 
   pump1.init();
   pumpController1.init();
-  #ifdef MOTORB_ENABLED
+#ifdef MOTORB_ENABLED
   pump2.init();
   pumpController2.init();
-  #endif
+#endif
   Serial.println("OK");
 }
-
+void scanI2C()
+{
+    byte error, address;
+    int nDevices;
+    Serial.println("Scanning I2C...");
+    nDevices = 0;
+    for (address = 1; address < 127; address++)
+    {
+        Wire.beginTransmission(address);
+        error = Wire.endTransmission();
+        if (error == 0)
+        {
+            Serial.print("I2C device found at address 0x");
+            if (address < 16)
+            {
+                Serial.print("0");
+            }
+            Serial.println(address, HEX);
+            nDevices++;
+        }
+        else if (error == 4)
+        {
+            Serial.print("Unknow error at address 0x");
+            if (address < 16)
+            {
+                Serial.print("0");
+            }
+            Serial.println(address, HEX);
+        }
+    }
+    if (nDevices == 0)
+    {
+        Serial.println("No I2C devices found\n");
+    }
+    else
+    {
+        Serial.println("done\n");
+    }
+}
 void setup()
 {
+  Wire.begin(/*SDA, SCL, 100000*/);
   // Serial port for debugging purposes
   Serial.begin(500000);
   Serial.println(SEPARATE_LINE);
   Serial.printf("Project version v%s, built %s\n", VERSION, BUILD_TIMESTAMP);
   Serial.println("Init system:");
+
   displayDevice.init();
   initWaterBottles();
   initPumps();
   initButtons();
-  sensorDevices.init();
-  ledDevice.init();
-  buzzerDevice.init();
-  notifications.init();
   menuSetup();
 #ifdef SKIP_INIT_ALL
 #else
@@ -164,7 +200,13 @@ void setup()
   server.begin();
   globalTime.init();
 #endif
-
+#ifdef SCAN_I2C
+  scanI2C();
+#endif
+  sensorDevices.init();
+  ledDevice.init();
+  buzzerDevice.init();
+  notifications.init();
   Serial.println("System is initialized");
   Serial.println(SEPARATE_LINE);
   Serial.println();
@@ -194,7 +236,7 @@ void loopMainPage()
   display.setTextSize(1);
   display.setTextColor(ST7735_WHITE);
   display.setCursor(0, 0);
-  display.printf("T:%.1f H:%.1f", sensorDevices.currentTemperature, sensorDevices.currentHumidity);
+  display.printf("T:%.1f\xC2\xB0 H:%.1f%%RH", sensorDevices.currentTemperature, sensorDevices.currentHumidity);
   display.println();
   display.print("RRSI: ");
   display.println(WiFi.RSSI());
@@ -334,9 +376,9 @@ void loop()
   sensorDevices.poll();
   globalTime.loop();
   pumpController1.execute();
-  #ifdef MOTORB_ENABLED
+#ifdef MOTORB_ENABLED
   pumpController2.execute();
-  #endif
+#endif
   waterBottleController1.execute();
   waterBottleController2.execute();
   displayDevice.swapBuffer();

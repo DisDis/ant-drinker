@@ -5,8 +5,8 @@
 
 #define SKIP_NTP_SYNC
 
-#define SENSOR_T_H_DHT
-//#define SENSOR_T_H_AM2320
+// #define SENSOR_T_H_DHT
+#define SENSOR_T_H_AM2320
 #define DHTTYPE DHT22
 
 #define SENSOR_T_H_PIN 26
@@ -17,6 +17,8 @@
 
 #define RO_MODE true
 #define RW_MODE false
+
+#define SCAN_I2C
 
 #define wifiSSIDKey "ssid"
 #define wifiPassKey "pass"

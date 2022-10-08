@@ -17,7 +17,7 @@ private:
     unsigned char pwmPin;
     unsigned char pwmChannel;
     //частота ШИМ
-    const int frequency = 100000;
+    const int frequency = 50000;
 
     //разрешение ШИМа (в битах)
     const int resolution = 8;

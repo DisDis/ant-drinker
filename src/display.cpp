@@ -77,7 +77,8 @@ void DisplayDevice::showSplashScreen()
     display.drawBitmap(64, SCREEN_HEIGHT - Splash_Logo_height, splash_Logo_bits, Splash_Logo_width, Splash_Logo_height, ST7735_WHITE);
     // display.drawRGBBitmap();
     display.setCursor(0, 0);
-    display.printf("v%s, %s", VERSION, BUILD_TIMESTAMP);
+    display.printf("v%s\n", VERSION);
+    display.printf("%s", BUILD_TIMESTAMP);
 
     // display.display();
     Serial.println("OK");

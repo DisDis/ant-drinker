@@ -19,12 +19,31 @@ void SensorDevices::init()
 #endif
 #ifdef SENSOR_T_H_AM2320
     Serial.print("    AM2320..");
+    // Serial.print("LIBRARY: ");
+    // Serial.print(AM232X_LIB_VERSION);
     if (!sensorTH.begin())
     {
-        Serial.println(F("am2320 failed"));
+        Serial.println(F(" AM2320 failed"));
     }
     else
     {
+        // sensorTH.wakeUp();
+        // Serial.println("GET SENSOR INFO (experimental)");
+        // Serial.print("  Model:\t");
+        // Serial.println(sensorTH.getModel());
+        // Serial.print("  Version:\t");
+        // Serial.println(sensorTH.getVersion());
+        // Serial.print("  DevId:\t");
+        // Serial.println(sensorTH.getDeviceID());
+
+        // Serial.println();
+        // Serial.println("GET REGISTERS (experimental)");
+        // Serial.print(" Status:\t");
+        // Serial.println(sensorTH.getStatus());
+        // Serial.print("  UserA:\t");
+        // Serial.println(sensorTH.getUserRegisterA());
+        // Serial.print("  UserB:\t");
+        // Serial.println(sensorTH.getUserRegisterB());
         Serial.println("OK");
     }
 #endif
@@ -35,14 +54,35 @@ void SensorDevices::init()
     load();
 }
 
+
+
 void SensorDevices::poll()
 {
     if (!tmrTempHumi.tick())
     {
         return;
     }
+#ifdef SENSOR_T_H_AM2320
+    // int status = sensorTH.read();
+    // switch (status)
+    // {
+    // case AM232X_OK:
+    //     currentTemperature = sensorTH.getTemperature();
+    //     currentHumidity = sensorTH.getHumidity();
+    //     // Serial.println("OK");
+    //     break;
+    // default:
+    //     Serial.print("AM2320 error: ");
+    //     Serial.println(status);
+    //     break;
+    // }
     currentTemperature = sensorTH.readTemperature();
     currentHumidity = sensorTH.readHumidity();
+#endif
+#ifdef SENSOR_T_H_DHT
+    currentTemperature = sensorTH.readTemperature();
+    currentHumidity = sensorTH.readHumidity();
+#endif
     int value = digitalRead(SENSOR_LOW_WATER) == HIGH;
     if (value != isWater1Low)
     {
