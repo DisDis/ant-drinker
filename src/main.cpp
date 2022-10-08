@@ -137,6 +137,14 @@ void setup()
   Serial.printf("Project version v%s, built %s\n", VERSION, BUILD_TIMESTAMP);
   Serial.println("Init system:");
   displayDevice.init();
+  initWaterBottles();
+  initPumps();
+  initButtons();
+  sensorDevices.init();
+  ledDevice.init();
+  buzzerDevice.init();
+  notifications.init();
+  menuSetup();
 #ifdef SKIP_INIT_ALL
 #else
   initSPIFFS();
@@ -156,14 +164,6 @@ void setup()
   server.begin();
   globalTime.init();
 #endif
-  initButtons();
-  initWaterBottles();
-  initPumps();
-  sensorDevices.init();
-  ledDevice.init();
-  buzzerDevice.init();
-  notifications.init();
-  menuSetup();
 
   Serial.println("System is initialized");
   Serial.println(SEPARATE_LINE);

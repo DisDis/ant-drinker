@@ -17,7 +17,7 @@ private:
     unsigned char pwmPin;
     unsigned char pwmChannel;
     //частота ШИМ
-    const int frequency = 25000;
+    const int frequency = 100000;
 
     //разрешение ШИМа (в битах)
     const int resolution = 8;
@@ -35,11 +35,14 @@ public:
     {
         pinMode(directionPin0, OUTPUT);
         pinMode(directionPin1, OUTPUT);
+        pinMode(pwmPin, OUTPUT);
+
         if (ledcSetup(pwmChannel, frequency, resolution) == 0)
         {
             Serial.println("ledc channel was not configured.");
         }
         ledcAttachPin(pwmPin, pwmChannel);
+        stop();
     }
     /// @brief
     /// @param power Power 0-255

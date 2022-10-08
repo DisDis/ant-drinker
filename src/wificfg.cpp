@@ -33,6 +33,7 @@ bool initWiFi()
   WiFi.mode(WIFI_STA);
 
   String pass = preferences.getString(wifiPassKey, "");
+  WiFi.setHostname(HOSTNAME_WIFI);
   WiFi.begin(ssid.c_str(), pass.c_str());
   preferences.end();
   Serial.println("Connecting to WiFi...");

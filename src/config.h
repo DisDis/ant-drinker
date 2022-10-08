@@ -1,6 +1,8 @@
 #ifndef _Config_h
 #define _Config_h
 
+#define HOSTNAME_WIFI "ant-drinker"
+
 #define SKIP_NTP_SYNC
 
 #define SENSOR_T_H_DHT
