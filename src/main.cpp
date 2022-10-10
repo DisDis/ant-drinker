@@ -179,10 +179,12 @@ void setup()
 {
   // Serial port for debugging purposes
   Serial.begin(500000);
+  // Serial.setDebugOutput(true);
   Serial.println(SEPARATE_LINE);
   Serial.printf("Project version v%s, built %s\n", VERSION, BUILD_TIMESTAMP);
   Serial.println("Init system:");
   Wire.begin(SDA, SCL, I2C_FREQ);
+  Wire.setTimeOut(100);
   displayDevice.init();
   initWaterBottles();
   initPumps();
@@ -228,6 +230,17 @@ char output[80];
 struct tm timeinfo;
 time_t now;
 
+void testRSSI()
+{
+  drawWifiRSSI(SCREEN_WIDTH - 100, 20, -90);
+  drawWifiRSSI(SCREEN_WIDTH - 80, 20, -80);
+  drawWifiRSSI(SCREEN_WIDTH - 100, 30, -70);
+  drawWifiRSSI(SCREEN_WIDTH - 80, 30, -67);
+  drawWifiRSSI(SCREEN_WIDTH - 100, 40, -60);
+  drawWifiRSSI(SCREEN_WIDTH - 80, 40, -50);
+  drawWifiRSSI(SCREEN_WIDTH - 100, 50, -30);
+}
+
 void loopMainPage()
 {
   if (applicationState.buttonClick)
@@ -260,7 +273,7 @@ void loopMainPage()
     display.drawRect(1, SCREEN_HEIGHT - 5, SCREEN_WIDTH - 2, 4, ST7735_WHITE);
     display.fillRect(2, SCREEN_HEIGHT - 4, (SCREEN_WIDTH - 2) * pumpController1.getWorkPercent(), 2, ST7735_RED);
   }
-  drawWifiRSSI(SCREEN_WIDTH - WIFI_W, 10, WiFi.RSSI());
+  drawWifiRSSI(SCREEN_WIDTH - WIFI_W - 1, 1, WiFi.RSSI());
 }
 
 void loopMenuPage()

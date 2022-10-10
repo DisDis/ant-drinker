@@ -55,10 +55,8 @@ void DisplayDevice::init()
     // OR use this initializer (uncomment) if using a 1.47" 174x320 TFT:
     // tft.init(174, 320);           // Init ST7789 174x320
     display.invertDisplay(1);
-    display.setSPISpeed(70000000);
-    Serial.println("OK");
-    // display.flipScreenVertically();
-    // display.setContrast(255);
+    //display.setSPISpeed(70000000);
+    Serial.print(".init.");
     turnOn();
     display.setTextSize(1);
     display.setTextWrap(false);
@@ -67,8 +65,11 @@ void DisplayDevice::init()
     display.setRotation(3);
     display.enableTearing(false);
     display.fillScreen(ST77XX_BLACK);
-    showSplashScreen();
+#ifdef SCREEN_BUFFER
     display.displayBuffer(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+#endif
+  Serial.println("OK");
+  showSplashScreen();
 }
 
 void DisplayDevice::showSplashScreen()
@@ -120,5 +121,7 @@ void DisplayDevice::turnOff(void)
 }
 void DisplayDevice::swapBuffer()
 {
+#ifdef SCREEN_BUFFER
     display.displayBuffer(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+#endif
 }

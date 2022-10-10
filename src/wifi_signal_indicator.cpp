@@ -3,13 +3,11 @@
 #include "display.h"
 #include "wifi_signal_indicator.h"
 
-
-
 void drawWifiRSSI(int x, int y, int rssi)
 {
-    display.drawLine(x, y + WIFI_H, x + WIFI_W + 2, y + WIFI_H, ST7735_WHITE);
-    display.drawLine(x, y + WIFI_H, x + WIFI_W + 2, y, ST7735_WHITE);
-    display.drawLine(x + WIFI_W + 2, y + WIFI_H, x + WIFI_W + 2, y + WIFI_H, ST7735_WHITE);
+    display.drawLine(x, y + WIFI_H + 1, x + WIFI_W, y + WIFI_H + 1, ST7735_WHITE);
+    display.drawLine(x, y + WIFI_H, x + WIFI_W - 1, y - 1, ST7735_WHITE);
+    display.drawLine(x + WIFI_W, y - 1, x + WIFI_W, y + WIFI_H, ST7735_WHITE);
     unsigned int color = ST7735_GREEN;
     byte count = 7;
     if (rssi <= -90)
@@ -49,13 +47,16 @@ void drawWifiRSSI(int x, int y, int rssi)
     }
     else
     {
-        color = ST7735_BLACK;
-        count = 0;
+        color = 0x1549; // BEST
+        count = 7;
     }
+    char index = 0;
     while (count > 0)
     {
-        display.fillRect(x, y, WIFI_W_BAR, WIFI_H, color);
+        char h = WIFI_H - (7 - index) * WIFI_W_BAR;
+        display.fillRect(x + 2, y + WIFI_H - h + 1, WIFI_W_BAR, h, color);
         x += WIFI_W_BAR;
         count--;
+        index++;
     }
 }

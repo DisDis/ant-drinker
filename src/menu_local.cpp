@@ -350,8 +350,8 @@ char *getUptimeStr()
     int h = tmpTime / (60 * 60);
     tmpTime = tmpTime - h * (60 * 60);
     int m = tmpTime / (60);
-    int s = tmpTime - m * 60;
-    snprintf(uptimeBuffer, sizeof(uptimeBuffer), "%03dd%02dh%02dm%02ds", day, h, m, s);
+    // int s = tmpTime - m * 60;
+    snprintf(uptimeBuffer, sizeof(uptimeBuffer), "%03dd%02dh%02dm"/*%02ds*/, day, h, m/*, s*/);
     return uptimeBuffer;
 }
 class UpTimePrompt : public prompt

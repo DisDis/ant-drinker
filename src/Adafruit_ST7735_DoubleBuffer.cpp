@@ -451,13 +451,9 @@ void Adafruit_ST7735::writeLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1,
 
   for (; x0 <= x1; x0++) {
     if (steep) {
-      //writePixel(y0, x0, color);
-      // ScreenBuffer[y0 * 80/*ST7735_TFTWIDTH*/ + x0] = color;
-      drawPixel(y0, x0, color);
+      writePixel(y0, x0, color);
     } else {
-      //writePixel(x0, y0, color);
-      // ScreenBuffer[x0 * 80/*ST7735_TFTHEIGHT*/ + y0] = color;
-      drawPixel(x0, y0, color);
+      writePixel(x0, y0, color);
     }
     err -= dy;
     if (err < 0) {
