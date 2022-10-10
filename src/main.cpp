@@ -33,6 +33,7 @@
 #include "led_device.h"
 #include "common.h"
 #include "Version.h"
+#include "wifi_signal_indicator.h"
 
 #define SEPARATE_LINE "-------------------------------"
 
@@ -100,10 +101,17 @@ void initButtons()
   Serial.println("OK");
 }
 
+void updatingProgress(size_t progress, size_t size)
+{
+  applicationState.currentPage = updatingPage;
+  applicationState.updateProgress = (progress * 100) / size;
+}
+
 void initOTA()
 {
   Serial.print("  OTA...");
   AsyncElegantOTA.begin(&server);
+  Update.onProgress(updatingProgress);
   Serial.println("OK");
 }
 
@@ -130,52 +138,51 @@ void initPumps()
 }
 void scanI2C()
 {
-    byte error, address;
-    int nDevices;
-    Serial.println("Scanning I2C...");
-    nDevices = 0;
-    for (address = 1; address < 127; address++)
+  byte error, address;
+  int nDevices;
+  Serial.println("Scanning I2C...");
+  nDevices = 0;
+  for (address = 1; address < 127; address++)
+  {
+    Wire.beginTransmission(address);
+    error = Wire.endTransmission();
+    if (error == 0)
     {
-        Wire.beginTransmission(address);
-        error = Wire.endTransmission();
-        if (error == 0)
-        {
-            Serial.print("I2C device found at address 0x");
-            if (address < 16)
-            {
-                Serial.print("0");
-            }
-            Serial.println(address, HEX);
-            nDevices++;
-        }
-        else if (error == 4)
-        {
-            Serial.print("Unknow error at address 0x");
-            if (address < 16)
-            {
-                Serial.print("0");
-            }
-            Serial.println(address, HEX);
-        }
+      Serial.print("I2C device found at address 0x");
+      if (address < 16)
+      {
+        Serial.print("0");
+      }
+      Serial.println(address, HEX);
+      nDevices++;
     }
-    if (nDevices == 0)
+    else if (error == 4)
     {
-        Serial.println("No I2C devices found\n");
+      Serial.print("Unknow error at address 0x");
+      if (address < 16)
+      {
+        Serial.print("0");
+      }
+      Serial.println(address, HEX);
     }
-    else
-    {
-        Serial.println("done\n");
-    }
+  }
+  if (nDevices == 0)
+  {
+    Serial.println("No I2C devices found\n");
+  }
+  else
+  {
+    Serial.println("done\n");
+  }
 }
 void setup()
 {
-  Wire.begin(/*SDA, SCL, 100000*/);
   // Serial port for debugging purposes
   Serial.begin(500000);
   Serial.println(SEPARATE_LINE);
   Serial.printf("Project version v%s, built %s\n", VERSION, BUILD_TIMESTAMP);
   Serial.println("Init system:");
-
+  Wire.begin(SDA, SCL, I2C_FREQ);
   displayDevice.init();
   initWaterBottles();
   initPumps();
@@ -232,6 +239,7 @@ void loopMainPage()
     return;
   }
   display.fillScreen(ST7735_BLACK);
+  display.setTextColor(ST7735_WHITE);
   display.drawBitmap(64, SCREEN_HEIGHT - Splash_Logo_height, splash_Logo_bits, Splash_Logo_width, Splash_Logo_height, ST7735_WHITE);
   display.setTextSize(1);
   display.setTextColor(ST7735_WHITE);
@@ -244,11 +252,15 @@ void loopMainPage()
   localtime_r(&now, &timeinfo);
   strftime(output, 80, DATETIME_FORMAT, &timeinfo);
   display.println(output);
+  display.print("Uptime: ");
+  display.setTextColor(ST7735_GREEN);
+  display.println(getUptimeStr());
   if (pumpController1.getMode() == WorkingMode)
   {
     display.drawRect(1, SCREEN_HEIGHT - 5, SCREEN_WIDTH - 2, 4, ST7735_WHITE);
     display.fillRect(2, SCREEN_HEIGHT - 4, (SCREEN_WIDTH - 2) * pumpController1.getWorkPercent(), 2, ST7735_RED);
   }
+  drawWifiRSSI(SCREEN_WIDTH - WIFI_W, 10, WiFi.RSSI());
 }
 
 void loopMenuPage()
@@ -269,6 +281,24 @@ void loopIdlePage()
   }
 }
 
+void loopUpdatingPage()
+{
+  display.fillScreen(ST7735_BLACK);
+  display.setTextColor(ST7735_WHITE);
+  display.setTextSize(1);
+  display.setCursor(0, 0);
+  display.printf("v%s\n", VERSION);
+  display.print("Uptime: ");
+  display.setTextColor(ST7735_GREEN);
+  display.println(getUptimeStr());
+  display.setTextColor(ST7735_WHITE);
+  display.setCursor(0, SCREEN_HEIGHT - 20);
+  display.printf("Progress: %02d%%\n", applicationState.updateProgress);
+  display.drawRect(1, SCREEN_HEIGHT - 5, SCREEN_WIDTH - 2, 4, ST7735_WHITE);
+  display.fillRect(2, SCREEN_HEIGHT - 4, (SCREEN_WIDTH - 2) * (float)(applicationState.updateProgress / 100.0), 2, ST7735_GREEN);
+  drawWifiRSSI(SCREEN_WIDTH - WIFI_W, 10, WiFi.RSSI());
+}
+
 void executeCurrentState()
 {
   switch (applicationState.currentPage)
@@ -285,6 +315,9 @@ void executeCurrentState()
     break;
   case (idlePage):
     loopIdlePage();
+    break;
+  case (updatingPage):
+    loopUpdatingPage();
     break;
   default:
     applicationState.currentPage = idlePage;

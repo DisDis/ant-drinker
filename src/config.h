@@ -19,6 +19,7 @@
 #define RW_MODE false
 
 #define SCAN_I2C
+#define I2C_FREQ 100000
 
 #define wifiSSIDKey "ssid"
 #define wifiPassKey "pass"

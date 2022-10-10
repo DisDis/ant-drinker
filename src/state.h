@@ -9,7 +9,8 @@ enum ScreenType
   mainPage,
   graphHPage,
   menuPage,
-  idlePage
+  idlePage,
+  updatingPage
 };
 
 class AppState
@@ -19,6 +20,7 @@ public:
   unsigned long lastActionMillis = millis();
   unsigned long lastSaveTHData = 0;
   ScreenType currentPage = mainPage;
+  unsigned char updateProgress = 0;
   bool buttonClick = false;
   bool buttonLeft = false;
   bool buttonRight = false;

@@ -18,22 +18,22 @@
 //#include <menuIO/chainStream.h>
 using namespace Menu;
 
-#define ST7735_GRAY RGB565(128,128,128)
+#define ST7735_GRAY RGB565(128, 128, 128)
 
 // define menu colors --------------------------------------------------------
 //  {{disabled normal,disabled selected},{enabled normal,enabled selected, enabled editing}}
-//monochromatic color table
+// monochromatic color table
 // https://github.com/neu-rah/ArduinoMenu/blob/master/examples/targetSel/targetSel/targetSel.ino
 // define menu colors --------------------------------------------------------
 // each color is in the format:
 //  {{disabled normal,disabled selected},{enabled normal,enabled selected, enabled editing}}
 const colorDef<uint16_t> colors[6] MEMMODE = {
-  {{(uint16_t)ST7735_BLACK,(uint16_t)ST7735_BLACK}, {(uint16_t)ST7735_BLACK, (uint16_t)ST7735_BLUE,  (uint16_t)ST7735_BLUE}},//bgColor
-  {{(uint16_t)ST7735_GRAY, (uint16_t)ST7735_GRAY},  {(uint16_t)ST7735_WHITE, (uint16_t)ST7735_WHITE, (uint16_t)ST7735_WHITE}},//fgColor
-  {{(uint16_t)ST7735_WHITE,(uint16_t)ST7735_BLACK}, {(uint16_t)ST7735_YELLOW,(uint16_t)ST7735_YELLOW,(uint16_t)ST7735_RED}},//valColor
-  {{(uint16_t)ST7735_WHITE,(uint16_t)ST7735_BLACK}, {(uint16_t)ST7735_WHITE, (uint16_t)ST7735_YELLOW,(uint16_t)ST7735_YELLOW}},//unitColor
-  {{(uint16_t)ST7735_WHITE,(uint16_t)ST7735_GRAY},  {(uint16_t)ST7735_BLACK, (uint16_t)ST7735_BLUE,  (uint16_t)ST7735_WHITE}},//cursorColor
-  {{(uint16_t)ST7735_WHITE,(uint16_t)ST7735_YELLOW},{(uint16_t)ST7735_BLUE,  (uint16_t)ST7735_RED,   (uint16_t)ST7735_RED}},//titleColor
+    {{(uint16_t)ST7735_BLACK, (uint16_t)ST7735_BLACK}, {(uint16_t)ST7735_BLACK, (uint16_t)ST7735_BLUE, (uint16_t)ST7735_BLUE}},     // bgColor
+    {{(uint16_t)ST7735_GRAY, (uint16_t)ST7735_GRAY}, {(uint16_t)ST7735_WHITE, (uint16_t)ST7735_WHITE, (uint16_t)ST7735_WHITE}},     // fgColor
+    {{(uint16_t)ST7735_WHITE, (uint16_t)ST7735_BLACK}, {(uint16_t)ST7735_YELLOW, (uint16_t)ST7735_YELLOW, (uint16_t)ST7735_RED}},   // valColor
+    {{(uint16_t)ST7735_WHITE, (uint16_t)ST7735_BLACK}, {(uint16_t)ST7735_WHITE, (uint16_t)ST7735_YELLOW, (uint16_t)ST7735_YELLOW}}, // unitColor
+    {{(uint16_t)ST7735_WHITE, (uint16_t)ST7735_GRAY}, {(uint16_t)ST7735_BLACK, (uint16_t)ST7735_BLUE, (uint16_t)ST7735_WHITE}},     // cursorColor
+    {{(uint16_t)ST7735_WHITE, (uint16_t)ST7735_YELLOW}, {(uint16_t)ST7735_BLUE, (uint16_t)ST7735_RED, (uint16_t)ST7735_RED}},       // titleColor
 };
 
 #define fontX 7
@@ -300,7 +300,7 @@ public:
 MENU(pumpController1Menu, "Pump1", doNothing, noEvent, wrapStyle,
      SUBMENU(pumpController1OnOff),
      altOP(PumpModePrompt, "", doNothing, noEvent),
-     FIELD(pumpController1.mlAtTime, "Count", "ml", 10, 999, 10, 1, doNothing, enterEvent, wrapStyle),
+     FIELD(pumpController1.mlAtTime, "Count", "ml", 1, 999, 10, 1, doNothing, enterEvent, wrapStyle),
      altFIELD(IntervalField, pumpController1.tmrAction.duration, "Interval", "", 60, 31 * 24 * 60 * 60, 5 * 60, 60, doNothing, noEvent, wrapStyle),
 
      OP("Stop pump", pump1Stop, enterEvent),
@@ -341,9 +341,45 @@ MENU(networkMenu, "Network[STUB]", doNothing, noEvent, wrapStyle,
      OP("MQTT", doNothing, noEvent),
      EXIT("<Back"));
 // --------- Version & info
-MENU(versionInfoMenu, "Version & info[STUB]", doNothing, noEvent, wrapStyle,
+char uptimeBuffer[] = "000d00h00m00s ";
+char *getUptimeStr()
+{
+    unsigned long tt = millis() / 1000;
+    int day = tt / (unsigned long)(60 * 60 * 24);
+    unsigned long tmpTime = tt - day * (60 * 60 * 24);
+    int h = tmpTime / (60 * 60);
+    tmpTime = tmpTime - h * (60 * 60);
+    int m = tmpTime / (60);
+    int s = tmpTime - m * 60;
+    snprintf(uptimeBuffer, sizeof(uptimeBuffer), "%03dd%02dh%02dm%02ds", day, h, m, s);
+    return uptimeBuffer;
+}
+class UpTimePrompt : public prompt
+{
+public:
+    unsigned int t = 0;
+    unsigned int last = 0;
+    UpTimePrompt(constMEM promptShadow &p) : prompt(p) {}
+    Used printTo(navRoot &root, bool sel, menuOut &out, idx_t idx, idx_t len, idx_t) override
+    {
+        last = t;
+        bool ed = false;
+        out.print("Uptime: ");
+        out.setColor(valColor, sel, enabledStatus, ed);
+        out.print(getUptimeStr());
+        out.setColor(unitColor, sel, enabledStatus, ed);
+        return out.printRaw(F(outpuDateTime), len);
+    }
+    virtual bool changed(const navNode &nav, const menuOut &out, bool sub = true)
+    {
+        t = millis() / 1000;
+        return last != t;
+    }
+};
+MENU(versionInfoMenu, "Version & info", doNothing, noEvent, wrapStyle,
      OP(VERSION, doNothing, noEvent),
      OP(BUILD_TIMESTAMP, doNothing, noEvent),
+     altOP(UpTimePrompt, "", doNothing, noEvent),
      EXIT("<Back"));
 // ---------------
 // ---------------
