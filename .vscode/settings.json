@@ -17,6 +17,10 @@
         "bitset": "cpp",
         "cstdlib": "cpp",
         "functional": "cpp",
-        "random": "cpp"
+        "random": "cpp",
+        "algorithm": "cpp",
+        "memory": "cpp",
+        "iosfwd": "cpp",
+        "streambuf": "cpp"
     }
 }

@@ -29,6 +29,7 @@
 #include "pump.h"
 #include "pump_controller.h"
 #include "buzzer.h"
+#include "icons.h"
 #include "global_time.h"
 #include "led_device.h"
 #include "common.h"
@@ -226,7 +227,7 @@ unsigned long previousMillis = 0;
 unsigned long currentMillis = millis();
 
 // TODO: Remove!
-char output[80];
+// char output[80];
 struct tm timeinfo;
 time_t now;
 
@@ -239,6 +240,26 @@ void testRSSI()
   drawWifiRSSI(SCREEN_WIDTH - 100, 40, -60);
   drawWifiRSSI(SCREEN_WIDTH - 80, 40, -50);
   drawWifiRSSI(SCREEN_WIDTH - 100, 50, -30);
+}
+
+void displayWaterBottle()
+{
+  if (!waterBottle1.enabled)
+  {
+    return;
+  }
+  uint8_t percent = waterBottle1.value * 100 / waterBottle1.capacity;
+  drawBottle(0, 20, percent);
+  display.setTextColor(ST7735_WHITE);
+  char buffer[] = "\0\0\0\0";
+  snprintf(buffer, sizeof(buffer), "%d%%", percent);
+  int16_t x1;
+  int16_t y1;
+  uint16_t w;
+  uint16_t h;
+  display.getTextBounds(buffer, 0, 0, &x1, &y1, &w, &h);
+  display.setCursor(0 + h / 2, 20 + bottle_h + 1);
+  display.print(buffer);
 }
 
 void loopMainPage()
@@ -257,22 +278,24 @@ void loopMainPage()
   display.setTextSize(1);
   display.setTextColor(ST7735_WHITE);
   display.setCursor(0, 0);
-  display.printf("T:%.1f\xC2\xB0 H:%.1f%%RH", sensorDevices.currentTemperature, sensorDevices.currentHumidity);
+  // display.drawRGBBitmap(0, 0, temperatureImage, temperatureImage_width, temperatureImage_height);
+  // display.setCursor(temperatureImage_width + 1, 0);
+  display.printf("T:%.1fC H:%.1f%%RH", sensorDevices.currentTemperature, sensorDevices.currentHumidity);
   display.println();
-  display.print("RRSI: ");
-  display.println(WiFi.RSSI());
-  time(&now);
-  localtime_r(&now, &timeinfo);
-  strftime(output, 80, DATETIME_FORMAT, &timeinfo);
-  display.println(output);
+  // time(&now);
+  // localtime_r(&now, &timeinfo);
+  // strftime(output, 80, DATETIME_FORMAT, &timeinfo);
+  // display.println(output);
   display.print("Uptime: ");
   display.setTextColor(ST7735_GREEN);
   display.println(getUptimeStr());
   if (pumpController1.getMode() == WorkingMode)
   {
     display.drawRect(1, SCREEN_HEIGHT - 5, SCREEN_WIDTH - 2, 4, ST7735_WHITE);
-    display.fillRect(2, SCREEN_HEIGHT - 4, (SCREEN_WIDTH - 2) * pumpController1.getWorkPercent(), 2, ST7735_RED);
+    display.fillRect(3, SCREEN_HEIGHT - 3, (SCREEN_WIDTH - 5) * pumpController1.getWorkPercent(), 1, ST7735_BLUE);
   }
+  
+  displayWaterBottle();
   drawWifiRSSI(SCREEN_WIDTH - WIFI_W - 1, 1, WiFi.RSSI());
 }
 
@@ -308,8 +331,8 @@ void loopUpdatingPage()
   display.setCursor(0, SCREEN_HEIGHT - 20);
   display.printf("Progress: %02d%%\n", applicationState.updateProgress);
   display.drawRect(1, SCREEN_HEIGHT - 5, SCREEN_WIDTH - 2, 4, ST7735_WHITE);
-  display.fillRect(2, SCREEN_HEIGHT - 4, (SCREEN_WIDTH - 2) * (float)(applicationState.updateProgress / 100.0), 2, ST7735_GREEN);
-  drawWifiRSSI(SCREEN_WIDTH - WIFI_W, 10, WiFi.RSSI());
+  display.fillRect(3, SCREEN_HEIGHT - 3, (SCREEN_WIDTH - 5) * (float)(applicationState.updateProgress / 100.0), 1, ST7735_GREEN);
+  drawWifiRSSI(SCREEN_WIDTH - WIFI_W - 1, 1, WiFi.RSSI());
 }
 
 void executeCurrentState()

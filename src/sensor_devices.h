@@ -25,6 +25,7 @@ class SensorDevices{
         void save();
         void load();
     private:
+        bool hasReadT = true;
         TimerMs tmrTempHumi = TimerMs(2500, 1, 0);
     ON_WATER_LEVEL_CHANGED_CALLBACK waterLevelChangedCallback = nullptr;
         #ifdef SENSOR_T_H_DHT

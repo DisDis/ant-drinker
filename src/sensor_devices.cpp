@@ -54,8 +54,6 @@ void SensorDevices::init()
     load();
 }
 
-
-
 void SensorDevices::poll()
 {
     if (!tmrTempHumi.tick())
@@ -76,8 +74,23 @@ void SensorDevices::poll()
     //     Serial.println(status);
     //     break;
     // }
-    currentTemperature = sensorTH.readTemperature();
-    currentHumidity = sensorTH.readHumidity();
+    if (hasReadT)
+    {
+        float value = sensorTH.readTemperature();
+        if (!isnan(value))
+        {
+            currentTemperature = value;
+        }
+    }
+    else
+    {
+        float value = sensorTH.readHumidity();
+        if (!isnan(value))
+        {
+            currentHumidity = value;
+        }
+    }
+    hasReadT = !hasReadT;
 #endif
 #ifdef SENSOR_T_H_DHT
     currentTemperature = sensorTH.readTemperature();

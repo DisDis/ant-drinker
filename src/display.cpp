@@ -65,11 +65,9 @@ void DisplayDevice::init()
     display.setRotation(3);
     display.enableTearing(false);
     display.fillScreen(ST77XX_BLACK);
-#ifdef SCREEN_BUFFER
-    display.displayBuffer(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
-#endif
-  Serial.println("OK");
-  showSplashScreen();
+    Serial.println("OK");
+    showSplashScreen();
+    swapBuffer();
 }
 
 void DisplayDevice::showSplashScreen()
@@ -80,8 +78,6 @@ void DisplayDevice::showSplashScreen()
     display.setCursor(0, 0);
     display.printf("v%s\n", VERSION);
     display.printf("%s", BUILD_TIMESTAMP);
-
-    // display.display();
     Serial.println("OK");
 }
 
