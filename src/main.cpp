@@ -255,7 +255,7 @@ void displayWaterBottle()
   uint8_t percent = waterBottle1.value * 100 / waterBottle1.capacity;
   drawBottle(0, 20, percent);
   if (sensorDevices.isWater1Low){
-    display.drawRGBBitmap(5, 25, warningImage, warningImage_width, warningImage_height);
+    display.drawRGBBitmapTransparency(5, 25, warningImage, warningImage_width, warningImage_height, 0);
   }
   display.setTextColor(ST7735_WHITE);
   char buffer[] = "\0\0\0\0";

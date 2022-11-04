@@ -70,6 +70,9 @@ public:
   void initB(void);                             // for ST7735B displays
   void initR(uint8_t options = INITR_GREENTAB); // for ST7735R
 
+  void drawRGBBitmapTransparency(int16_t x, int16_t y, const uint16_t bitmap[],
+                                 int16_t w, int16_t h, uint16_t tColor);
+
   void setRotation(uint8_t m);
   // XTronical Additions
 #ifdef SCREEN_BUFFER

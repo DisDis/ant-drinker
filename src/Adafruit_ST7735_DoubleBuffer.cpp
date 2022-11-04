@@ -262,6 +262,32 @@ void Adafruit_ST7735::initR(uint8_t options) {
 
 /**************************************************************************/
 /*!
+   @brief   Draw a PROGMEM-resident 16-bit image (RGB 5/6/5) at the specified
+   (x,y) position. For 16-bit display devices; no color reduction performed.
+    @param    x   Top left corner x coordinate
+    @param    y   Top left corner y coordinate
+    @param    bitmap  byte array with 16-bit color bitmap
+    @param    w   Width of bitmap in pixels
+    @param    h   Height of bitmap in pixels
+    @param    tColor Transparency color
+*/
+/**************************************************************************/
+void Adafruit_ST7735::drawRGBBitmapTransparency(int16_t x, int16_t y, const uint16_t bitmap[],
+                                 int16_t w, int16_t h, uint16_t tColor) {
+  startWrite();
+  for (int16_t j = 0; j < h; j++, y++) {
+    for (int16_t i = 0; i < w; i++) {
+      uint16_t color = pgm_read_word(&bitmap[j * w + i]);
+      if (color != tColor){
+        writePixel(x + i, y, color);
+      }
+    }
+  }
+  endWrite();
+}
+
+/**************************************************************************/
+/*!
     @brief  Set origin of (0,0) and orientation of TFT display
     @param  m  The index for rotation, from 0-3 inclusive
 */
