@@ -322,16 +322,41 @@ MENU(notificationMenu, "Notification[STUB]", doNothing, noEvent, wrapStyle,
      EXIT("<Back"));
 // --------
 // ------------ Buzzer
+result buzzerTest(eventMask e)
+{
+     if (buzzerDevice.isEnabled){
+        buzzerDevice.turnOn(2);
+    } else {
+        buzzerDevice.turnOff();
+    }
+    buzzerDevice.isEnabled = !buzzerDevice.isEnabled;
+    return proceed;
+}
+
 TOGGLE(buzzerDevice.isEnabled, buzzerOnOff, "Enabled: ", doNothing, noEvent, wrapStyle, VALUE("Off", false, doNothing, noEvent), VALUE("On", true, doNothing, noEvent));
 MENU(buzzerSettingMenu, "Buzzer", doNothing, noEvent, wrapStyle,
      SUBMENU(buzzerOnOff),
      OP("DoNotDisturb", doNothing, noEvent),
+     OP("Test", buzzerTest, enterEvent),
      EXIT("<Back"));
 // --------
 // ------------ LED
+
+result LEDTest(eventMask e)
+{
+    if (ledDevice.enabled){
+        ledDevice.turnOn();
+    } else {
+        ledDevice.turnOff();
+    }
+    ledDevice.enabled = !ledDevice.enabled;
+    return proceed;
+}
+
 TOGGLE(ledDevice.enabled, ledOnOff, "Enabled: ", doNothing, noEvent, wrapStyle, VALUE("Off", false, doNothing, noEvent), VALUE("On", true, doNothing, noEvent));
 MENU(ledSettingMenu, "LED", doNothing, noEvent, wrapStyle,
      SUBMENU(ledOnOff),
+     OP("Test", LEDTest, enterEvent),
      EXIT("<Back"));
 // --------
 // --------------- Network

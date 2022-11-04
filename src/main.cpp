@@ -104,6 +104,9 @@ void initButtons()
 
 void updatingProgress(size_t progress, size_t size)
 {
+  if (!applicationState.isDisplayOn){
+    applicationState.lastActionMillis = currentMillis;  
+  }
   applicationState.currentPage = updatingPage;
   applicationState.updateProgress = (progress * 100) / size;
 }
@@ -112,6 +115,7 @@ void initOTA()
 {
   Serial.print("  OTA...");
   AsyncElegantOTA.begin(&server);
+  AsyncElegantOTA.setID(VERSION);
   Update.onProgress(updatingProgress);
   Serial.println("OK");
 }
@@ -250,6 +254,9 @@ void displayWaterBottle()
   }
   uint8_t percent = waterBottle1.value * 100 / waterBottle1.capacity;
   drawBottle(0, 20, percent);
+  if (sensorDevices.isWater1Low){
+    display.drawRGBBitmap(5, 25, warningImage, warningImage_width, warningImage_height);
+  }
   display.setTextColor(ST7735_WHITE);
   char buffer[] = "\0\0\0\0";
   snprintf(buffer, sizeof(buffer), "%d%%", percent);
@@ -281,6 +288,9 @@ void loopMainPage()
   // display.drawRGBBitmap(0, 0, temperatureImage, temperatureImage_width, temperatureImage_height);
   // display.setCursor(temperatureImage_width + 1, 0);
   display.printf("T:%.1fC H:%.1f%%RH", sensorDevices.currentTemperature, sensorDevices.currentHumidity);
+  if (sensorDevices.isWater1Low){
+    display.print(" W: Low!");
+  }
   display.println();
   // time(&now);
   // localtime_r(&now, &timeinfo);

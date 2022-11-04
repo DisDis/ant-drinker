@@ -4,6 +4,7 @@
 #define HOSTNAME_WIFI "ant-drinker"
 
 #define SKIP_NTP_SYNC
+//#define SKIP_INIT_ALL
 
 // #define SENSOR_T_H_DHT
 #define SENSOR_T_H_AM2320
@@ -32,11 +33,11 @@
 #define PUMP1_ID "pump1"
 #define PUMP2_ID "pump2"
 
-#define ButtonClickPin 25
-#define ButtonLeftPin 32
-#define ButtonRightPin 33
+#define ButtonClickPin 33
+#define ButtonLeftPin 25
+#define ButtonRightPin 35
 #define ButtonUpPin 34
-#define ButtonDownPin 35
+#define ButtonDownPin 32
 
 //#define MOTORB_ENABLED
 
@@ -52,7 +53,7 @@
 
 #define MOTORS_ON_PIN 4
 
-#define BUZZER_PIN 2
+#define BUZZER_PIN 26
 
 #define DATETIME_FORMAT "%d-%m-%y, %H:%M:%S"
 #define MENU_DATE_FORMAT "Date: %d-%m-%y"
