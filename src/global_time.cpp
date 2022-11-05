@@ -8,6 +8,31 @@ const char *ntpServer1 = "time.google.com";
 const char *ntpServer2 = "clock.isc.org";
 const char *ntpServer3 = "ntp.ix.ru";
 
+char _hrFormatBuffer[] = "000d00h00m00s ";
+char* convertSecondsToHumanReadableFormat(unsigned long timeSec = 0, bool showSeconds = 0)
+{
+    if (timeSec == 0)
+    {
+        timeSec = millis() / 1000;
+    }
+    unsigned long tt = timeSec;
+    int day = tt / (unsigned long)(60 * 60 * 24);
+    unsigned long tmpTime = tt - day * (60 * 60 * 24);
+    int h = tmpTime / (60 * 60);
+    tmpTime = tmpTime - h * (60 * 60);
+    int m = tmpTime / (60);
+    int s = tmpTime - m * 60;
+    if (showSeconds)
+    {
+        snprintf(_hrFormatBuffer, sizeof(_hrFormatBuffer), "%03dd%02dh%02dm%02ds", day, h, m, s);
+    }
+    else
+    {
+        snprintf(_hrFormatBuffer, sizeof(_hrFormatBuffer), "%03dd%02dh%02dm", day, h, m);
+    }
+    return _hrFormatBuffer;
+}
+
 GlobalTime::GlobalTime()
 {
 }

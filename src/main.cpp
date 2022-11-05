@@ -298,7 +298,7 @@ void loopMainPage()
   // display.println(output);
   display.print("Uptime: ");
   display.setTextColor(ST7735_GREEN);
-  display.println(getUptimeStr());
+  display.println(convertSecondsToHumanReadableFormat(0,0));
   if (pumpController1.getMode() == WorkingMode)
   {
     display.drawRect(1, SCREEN_HEIGHT - 5, SCREEN_WIDTH - 2, 4, ST7735_WHITE);
@@ -336,7 +336,7 @@ void loopUpdatingPage()
   display.printf("v%s\n", VERSION);
   display.print("Uptime: ");
   display.setTextColor(ST7735_GREEN);
-  display.println(getUptimeStr());
+  display.println(convertSecondsToHumanReadableFormat(0,0));
   display.setTextColor(ST7735_WHITE);
   display.setCursor(0, SCREEN_HEIGHT - 20);
   display.printf("Progress: %02d%%\n", applicationState.updateProgress);

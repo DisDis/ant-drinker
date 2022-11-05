@@ -13,7 +13,6 @@
 #include "sensor_devices.h"
 #include "notifications.h"
 
-extern char *getUptimeStr();
 extern Preferences preferences;
 extern unsigned long currentMillis;
 extern BuzzerDevice buzzerDevice;

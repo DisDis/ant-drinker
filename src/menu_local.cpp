@@ -297,12 +297,41 @@ public:
     }
 };
 
+class NextTimeRunPrompt : public prompt
+{
+public:
+    unsigned int t = 0;
+    unsigned int last = 0;
+    NextTimeRunPrompt(constMEM promptShadow &p) : prompt(p) {}
+    Used printTo(navRoot &root, bool sel, menuOut &out, idx_t idx, idx_t len, idx_t) override
+    {
+        last = t;
+        bool ed = false;
+        out.print("Next run: ");
+        out.setColor(valColor, sel, enabledStatus, ed);
+        unsigned long time = pumpController1.tmrAction.getActuallyPassed();
+        if (time > pumpController1.tmrAction.duration){
+            time = 0;
+        } else{
+            time = pumpController1.tmrAction.duration - time;
+        }
+        out.print(convertSecondsToHumanReadableFormat(time , 1));
+        out.setColor(unitColor, sel, enabledStatus, ed);
+        return out.printRaw(F(outpuDateTime), len);
+    }
+    virtual bool changed(const navNode &nav, const menuOut &out, bool sub = true)
+    {
+        t = millis() / 1000;
+        return last != t;
+    }
+};
+
 MENU(pumpController1Menu, "Pump1", doNothing, noEvent, wrapStyle,
      SUBMENU(pumpController1OnOff),
      altOP(PumpModePrompt, "", doNothing, noEvent),
      FIELD(pumpController1.mlAtTime, "Count", "ml", 1, 999, 10, 1, doNothing, enterEvent, wrapStyle),
      altFIELD(IntervalField, pumpController1.tmrAction.duration, "Interval", "", 60, 31 * 24 * 60 * 60, 5 * 60, 60, doNothing, noEvent, wrapStyle),
-
+     altOP(NextTimeRunPrompt, "", doNothing, noEvent),
      OP("Stop pump", pump1Stop, enterEvent),
      OP("Start pump", pump1Start, enterEvent),
      OP("Emergency Stop", pump1EmergencyStop, enterEvent),
@@ -366,19 +395,7 @@ MENU(networkMenu, "Network[STUB]", doNothing, noEvent, wrapStyle,
      OP("MQTT", doNothing, noEvent),
      EXIT("<Back"));
 // --------- Version & info
-char uptimeBuffer[] = "000d00h00m00s ";
-char *getUptimeStr()
-{
-    unsigned long tt = millis() / 1000;
-    int day = tt / (unsigned long)(60 * 60 * 24);
-    unsigned long tmpTime = tt - day * (60 * 60 * 24);
-    int h = tmpTime / (60 * 60);
-    tmpTime = tmpTime - h * (60 * 60);
-    int m = tmpTime / (60);
-    // int s = tmpTime - m * 60;
-    snprintf(uptimeBuffer, sizeof(uptimeBuffer), "%03dd%02dh%02dm"/*%02ds*/, day, h, m/*, s*/);
-    return uptimeBuffer;
-}
+
 class UpTimePrompt : public prompt
 {
 public:
@@ -391,7 +408,7 @@ public:
         bool ed = false;
         out.print("Uptime: ");
         out.setColor(valColor, sel, enabledStatus, ed);
-        out.print(getUptimeStr());
+        out.print(convertSecondsToHumanReadableFormat(0,0));
         out.setColor(unitColor, sel, enabledStatus, ed);
         return out.printRaw(F(outpuDateTime), len);
     }

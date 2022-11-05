@@ -3,6 +3,8 @@
 #include <time.h>
 #include "TimerMs.h"
 
+extern char* convertSecondsToHumanReadableFormat(unsigned long timeSec, bool showSeconds);
+
 class GlobalTime
 {
 public:
@@ -23,5 +25,7 @@ private:
     char timeZone = +3;
     time_t lastSyncDateTime = 0;
 };
+
+
 
 #endif

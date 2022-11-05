@@ -3,7 +3,7 @@
 
 #define HOSTNAME_WIFI "ant-drinker"
 
-#define SKIP_NTP_SYNC
+//#define SKIP_NTP_SYNC
 //#define SKIP_INIT_ALL
 
 // #define SENSOR_T_H_DHT
