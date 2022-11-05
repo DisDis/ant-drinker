@@ -65,6 +65,12 @@ String processor(const String& var) {
       ledState = "OFF";
     }
     return ledState;
+  } else
+  if (var == "TBOT_TOKEN"){
+   return notifications.telegramN.getToken();
+  }else
+  if (var == "TBOT_CHAT_ID"){
+    return notifications.telegramN.getChatId();
   }
   return String();
 }
@@ -88,6 +94,28 @@ void initNormalWebServer(){
       digitalWrite(ledPin, LOW);
       request->send(SPIFFS, "/index.html", "text/html", false, processor);
     });
+
+
+    server.on("/telegram_update", HTTP_POST, [](AsyncWebServerRequest *request) {
+      int params = request->params();
+     
+      for(int i=0;i<params;i++){
+        AsyncWebParameter* p = request->getParam(i);
+        if(p->isPost()){
+          // HTTP POST ssid value
+          if (p->name() == "tbot_token") {
+            notifications.telegramN.setToken(p->value().c_str());
+          }
+          // HTTP POST pass value
+          if (p->name() == "tbot_chat_id") {
+            notifications.telegramN.setChatId(p->value().c_str());
+          }
+        }
+      }
+      notifications.save();
+      request->send(200, "text/plain", "Done.");
+    });
+
   Serial.println("OK");
 }
 void initAPWebServer(){
@@ -99,7 +127,7 @@ void initAPWebServer(){
     
     server.serveStatic("/", SPIFFS, "/");
     
-    server.on("/", HTTP_POST, [](AsyncWebServerRequest *request) {
+    server.on("/wifi_update", HTTP_POST, [](AsyncWebServerRequest *request) {
       int params = request->params();
       preferences.begin(wifiConfigKey, RW_MODE);
       for(int i=0;i<params;i++){

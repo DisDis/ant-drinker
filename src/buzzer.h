@@ -10,7 +10,7 @@ private:
     bool sound = false;
     char count = 0;
     TimerMs interval = TimerMs(1000, 0, 0);
-    TimerMs durationSound = TimerMs(200, 0, 1);
+    TimerMs durationSound = TimerMs(250, 0, 1);
     void _turnOnSound();
 
 public:

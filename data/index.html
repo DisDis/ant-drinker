@@ -21,6 +21,20 @@
           </p>
           <p class="state">State: %STATE%</p>
         </div>
+        <div class="card">
+          <form action="/telegram_update" method="POST">
+            <p>
+              <label for="tbot_token">Token</label>
+              <input type="text" id ="tbot_token" name="tbot_token" value="%TBOT_TOKEN%"><br>
+              <label for="tbot_chat_id">ChatId</label>
+              <input type="text" id ="tbot_chat_id" name="tbot_chat_id" value="%TBOT_CHAT_ID%"><br>
+              <h4>
+                Use @myidbot (IDBot) to find out the chat ID of an individual or a group
+              </h4>
+              <input type ="submit" value ="Submit">
+            </p>
+          </form>
+        </div>
       </div>
     </div>
   </body>

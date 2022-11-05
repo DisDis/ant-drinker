@@ -4,6 +4,8 @@
 #include "notifications.h"
 
 #define NOTIFICATIONS_PREF_NAME "notifications"
+#define KEY_TELEGRAM_TOKEN "telg_token"
+#define KEY_TELEGRAM_CHAT_ID "telg_chatId"
 
 Notifications notifications;
 
@@ -23,6 +25,8 @@ void Notifications::save()
 {
     Serial.println("save");
     preferences.begin(NOTIFICATIONS_PREF_NAME, RW_MODE);
+    preferences.putString(KEY_TELEGRAM_TOKEN, telegramN.getToken());
+    preferences.putString(KEY_TELEGRAM_CHAT_ID,telegramN.getChatId());
     // preferences.putBool(KEY_isEnabled, _enabled);
     // preferences.putFloat(KEY_mlAtTime, mlAtTime);
     // preferences.putBool(KEY_isInverted, isInverted);
@@ -38,6 +42,8 @@ void Notifications::load()
     Serial.println("load");
     if (preferences.begin(NOTIFICATIONS_PREF_NAME, RO_MODE))
     {
+        telegramN.setToken(preferences.getString(KEY_TELEGRAM_TOKEN, String(BOT_TOKEN)).c_str());
+        telegramN.setChatId(preferences.getString(KEY_TELEGRAM_CHAT_ID).c_str());
         //     _enabled = preferences.getBool(KEY_isEnabled, _enabled);
         //     mlAtTime = preferences.getFloat(KEY_mlAtTime, mlAtTime);
         //     isInverted = preferences.getBool(KEY_isInverted, isInverted);
@@ -49,3 +55,7 @@ void Notifications::load()
     preferences.end();
 }
 
+void Notifications::test()
+{
+    telegramN.test();
+}

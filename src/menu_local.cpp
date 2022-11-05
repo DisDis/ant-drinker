@@ -81,16 +81,16 @@ result ledOff()
     return proceed;
 }
 
-result internalLedOn()
-{
-    digitalWrite(LED_BUILTIN, HIGH);
-    return proceed;
-}
-result internalLedOff()
-{
-    digitalWrite(LED_BUILTIN, LOW);
-    return proceed;
-}
+// result internalLedOn()
+// {
+//     digitalWrite(LED_BUILTIN, HIGH);
+//     return proceed;
+// }
+// result internalLedOff()
+// {
+//     digitalWrite(LED_BUILTIN, LOW);
+//     return proceed;
+// }
 
 result resetWaterBottle1(eventMask e)
 {
@@ -346,8 +346,16 @@ MENU(dispensersMenu, "Dispensers", doNothing, noEvent, wrapStyle,
 // --------
 
 // ------------ Notification
+
+result testNotification(eventMask e)
+{
+    notifications.test();
+    return proceed;
+}
+
 MENU(notificationMenu, "Notification[STUB]", doNothing, noEvent, wrapStyle,
      OP("On/Off", action1, noEvent),
+     OP("Test", testNotification, enterEvent),
      EXIT("<Back"));
 // --------
 // ------------ Buzzer

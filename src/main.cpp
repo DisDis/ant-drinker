@@ -104,8 +104,9 @@ void initButtons()
 
 void updatingProgress(size_t progress, size_t size)
 {
-  if (!applicationState.isDisplayOn){
-    applicationState.lastActionMillis = currentMillis;  
+  if (!applicationState.isDisplayOn)
+  {
+    applicationState.lastActionMillis = currentMillis;
   }
   applicationState.currentPage = updatingPage;
   applicationState.updateProgress = (progress * 100) / size;
@@ -254,7 +255,8 @@ void displayWaterBottle()
   }
   uint8_t percent = waterBottle1.value * 100 / waterBottle1.capacity;
   drawBottle(0, 20, percent);
-  if (sensorDevices.isWater1Low){
+  if (sensorDevices.isWater1Low)
+  {
     display.drawRGBBitmapTransparency(5, 25, warningImage, warningImage_width, warningImage_height, 0);
   }
   display.setTextColor(ST7735_WHITE);
@@ -288,23 +290,36 @@ void loopMainPage()
   // display.drawRGBBitmap(0, 0, temperatureImage, temperatureImage_width, temperatureImage_height);
   // display.setCursor(temperatureImage_width + 1, 0);
   display.printf("T:%.1fC H:%.1f%%RH", sensorDevices.currentTemperature, sensorDevices.currentHumidity);
-  if (sensorDevices.isWater1Low){
+  if (sensorDevices.isWater1Low)
+  {
     display.print(" W: Low!");
   }
   display.println();
-  // time(&now);
-  // localtime_r(&now, &timeinfo);
-  // strftime(output, 80, DATETIME_FORMAT, &timeinfo);
-  // display.println(output);
-  display.print("Uptime: ");
-  display.setTextColor(ST7735_GREEN);
-  display.println(convertSecondsToHumanReadableFormat(0,0));
+  // display.print("Uptime: ");
+  // display.setTextColor(ST7735_GREEN);
+  // display.println(convertSecondsToHumanReadableFormat(0,0));
+  // display.setTextColor(ST7735_WHITE);
+
+  unsigned long time = pumpController1.tmrAction.getActuallyPassed();
+  if (time > pumpController1.tmrAction.duration)
+  {
+    time = 0;
+  }
+  else
+  {
+    time = pumpController1.tmrAction.duration - time;
+  }
+  display.print("Next run: ");
+  display.setTextColor(ST7735_RED);
+  display.println(convertSecondsToHumanReadableFormat(time, 1));
+  display.setTextColor(ST7735_WHITE);
+
   if (pumpController1.getMode() == WorkingMode)
   {
     display.drawRect(1, SCREEN_HEIGHT - 5, SCREEN_WIDTH - 2, 4, ST7735_WHITE);
     display.fillRect(3, SCREEN_HEIGHT - 3, (SCREEN_WIDTH - 5) * pumpController1.getWorkPercent(), 1, ST7735_BLUE);
   }
-  
+
   displayWaterBottle();
   drawWifiRSSI(SCREEN_WIDTH - WIFI_W - 1, 1, WiFi.RSSI());
 }
@@ -336,7 +351,7 @@ void loopUpdatingPage()
   display.printf("v%s\n", VERSION);
   display.print("Uptime: ");
   display.setTextColor(ST7735_GREEN);
-  display.println(convertSecondsToHumanReadableFormat(0,0));
+  display.println(convertSecondsToHumanReadableFormat(0, 0));
   display.setTextColor(ST7735_WHITE);
   display.setCursor(0, SCREEN_HEIGHT - 20);
   display.printf("Progress: %02d%%\n", applicationState.updateProgress);
