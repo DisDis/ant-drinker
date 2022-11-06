@@ -7,6 +7,11 @@
 #define KEY_TELEGRAM_TOKEN "telg_token"
 #define KEY_TELEGRAM_CHAT_ID "telg_chatId"
 
+#define KEY_MQTT_USER "mqtt_user"
+#define KEY_MQTT_PASS "mqtt_pass"
+#define KEY_MQTT_PORT "mqtt_port"
+#define KEY_MQTT_SERVER "mqtt_server"
+
 Notifications notifications;
 
 Notifications::Notifications()
@@ -26,14 +31,13 @@ void Notifications::save()
     Serial.println("save");
     preferences.begin(NOTIFICATIONS_PREF_NAME, RW_MODE);
     preferences.putString(KEY_TELEGRAM_TOKEN, telegramN.getToken());
-    preferences.putString(KEY_TELEGRAM_CHAT_ID,telegramN.getChatId());
-    // preferences.putBool(KEY_isEnabled, _enabled);
-    // preferences.putFloat(KEY_mlAtTime, mlAtTime);
-    // preferences.putBool(KEY_isInverted, isInverted);
-    // preferences.putFloat(KEY_speedMlPerMs, speedMlPerMs);
-    // preferences.putUChar(KEY_power, power);
-    // preferences.putULong(KEY_INTERVAL_SEC, tmrAction.getDuration());
-    // preferences.putULong(KEY_START_DATETIME_SEC, tmrAction.getStartTime());
+    preferences.putString(KEY_TELEGRAM_CHAT_ID, telegramN.getChatId());
+
+    preferences.putString(KEY_MQTT_USER, mqttN.getUser());
+    preferences.putString(KEY_MQTT_PASS, mqttN.getPass());
+    preferences.putInt(KEY_MQTT_PORT, mqttN.getPort());
+    preferences.putString(KEY_MQTT_SERVER, mqttN.getServer());
+
     preferences.end();
 }
 
@@ -44,13 +48,11 @@ void Notifications::load()
     {
         telegramN.setToken(preferences.getString(KEY_TELEGRAM_TOKEN, String(BOT_TOKEN)).c_str());
         telegramN.setChatId(preferences.getString(KEY_TELEGRAM_CHAT_ID).c_str());
-        //     _enabled = preferences.getBool(KEY_isEnabled, _enabled);
-        //     mlAtTime = preferences.getFloat(KEY_mlAtTime, mlAtTime);
-        //     isInverted = preferences.getBool(KEY_isInverted, isInverted);
-        //     speedMlPerMs = preferences.getFloat(KEY_speedMlPerMs, speedMlPerMs);
-        //     power = preferences.getUChar(KEY_power, power);
-        //     tmrAction.setDuration(preferences.getULong(KEY_INTERVAL_SEC, tmrAction.getDuration()));
-        //     tmrAction.setStartTime(preferences.getULong(KEY_START_DATETIME_SEC, tmrAction.getStartTime()));
+
+        mqttN.setUser(preferences.getString(KEY_MQTT_USER).c_str());
+        mqttN.setPass(preferences.getString(KEY_MQTT_PASS).c_str());
+        mqttN.setPort(preferences.getInt(KEY_MQTT_PORT, 1883));
+        mqttN.setServer(preferences.getString(KEY_MQTT_SERVER).c_str());
     }
     preferences.end();
 }
@@ -58,4 +60,10 @@ void Notifications::load()
 void Notifications::test()
 {
     telegramN.test();
+}
+
+void Notifications::execute()
+{
+    telegramN.execute();
+    mqttN.execute();
 }

@@ -475,5 +475,6 @@ void loop()
 #endif
   waterBottleController1.execute();
   waterBottleController2.execute();
+  notifications.execute();
   displayDevice.swapBuffer();
 }

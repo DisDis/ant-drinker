@@ -32,3 +32,7 @@ void TelegramNotification::test()
 {
     bot->sendMessage(chatId, "Bot test message", "");
 }
+
+void TelegramNotification::execute(){
+    
+}
