@@ -29,6 +29,10 @@ MQTTNotification::MQTTNotification()
     randomSeed(micros());
     clientId = "AntDrinker-" + String(random(0xffff), HEX);
     mqtt = PubSubClient(client);
+}
+
+void MQTTNotification::init()
+{
     mqtt.setServer(server.c_str(), port);
     mqtt.setCallback(callback);
 }

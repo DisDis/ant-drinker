@@ -23,6 +23,8 @@ void Notifications::init()
     Serial.print("  Notifications...");
     Serial.print("    ");
     load();
+    mqttN.init();
+    telegramN.init();
     Serial.println("    OK");
 }
 

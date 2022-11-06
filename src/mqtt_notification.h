@@ -28,6 +28,7 @@ class MQTTNotification{
 
         void test();
         void execute();
+        void init();
 };
 
 #endif

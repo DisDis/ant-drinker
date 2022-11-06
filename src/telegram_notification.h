@@ -17,6 +17,7 @@ class TelegramNotification{
         String getChatId();
         void test();
         void execute();
+        void init();
 };
 
 #endif

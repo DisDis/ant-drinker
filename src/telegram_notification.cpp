@@ -34,5 +34,9 @@ void TelegramNotification::test()
 }
 
 void TelegramNotification::execute(){
+
+}
+
+void TelegramNotification::init(){
     
 }
