@@ -1,5 +1,6 @@
 #include "led_device.h"
 #include "config.h"
+#include "common.h"
 #include <Arduino.h>
 
 LEDDevice::LEDDevice()
@@ -8,14 +9,15 @@ LEDDevice::LEDDevice()
 
 void LEDDevice::init()
 {
-    Serial.print("  LED...");
+    LOG.print("  LED...");
     pinMode(LED_PIN, OUTPUT);
     digitalWrite(LED_PIN, LOW);
-    Serial.println("OK");
+    LOG.println("OK");
 }
 
 void LEDDevice::turnOff()
 {
+    LOG.print("LED::turnOff");
     digitalWrite(LED_PIN, LOW);
 }
 
@@ -23,6 +25,7 @@ void LEDDevice::turnOn()
 {
     if (enabled)
     {
+        LOG.print("LED::turnOn"); 
         digitalWrite(LED_PIN, HIGH);
     }
 }

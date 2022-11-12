@@ -9,11 +9,11 @@ BuzzerDevice::BuzzerDevice()
 
 void BuzzerDevice::init()
 {
-    Serial.print("  Buzzer...");
+    LOG.print("  Buzzer...");
     pinMode(BUZZER_PIN, OUTPUT);
     digitalWrite(BUZZER_PIN, LOW);
-    Serial.println("OK");
-    Serial.print("    state...");
+    LOG.println("OK");
+    LOG.print("    state...");
     load();
 }
 
@@ -74,7 +74,7 @@ void BuzzerDevice::turnOff()
 
 void BuzzerDevice::save()
 {
-    Serial.println("save");
+    LOG.println("save");
     preferences.begin(BUZZER_PREF_NAME, RW_MODE);
     preferences.putBool(KEY_isEnabled, isEnabled);
     // preferences.putFloat(KEY_mlAtTime, mlAtTime);
@@ -85,7 +85,7 @@ void BuzzerDevice::save()
 }
 void BuzzerDevice::load()
 {
-    Serial.println("load");
+    LOG.println("load");
     if (preferences.begin(BUZZER_PREF_NAME, RO_MODE))
     {
         isEnabled = preferences.getBool(KEY_isEnabled, isEnabled);

@@ -14,11 +14,11 @@ void WaterBottle::reset()
 
 void WaterBottle::init()
 {
-    Serial.print("  WaterBottle...");
-    Serial.print(_id);
-    Serial.print("    ");
+    LOG.print("  WaterBottle...");
+    LOG.print(_id);
+    LOG.print("    ");
     load();
-    Serial.println("    OK");
+    LOG.println("    OK");
 }
 
 #define KEY_CAPACITY "capacity"
@@ -27,7 +27,7 @@ void WaterBottle::init()
 
 void WaterBottle::save()
 {
-    Serial.println("save");
+    LOG.println("save");
     preferences.begin(_id, RW_MODE);
     preferences.putUInt(KEY_CAPACITY, capacity);
     preferences.putFloat(KEY_VALUE, value);
@@ -37,7 +37,7 @@ void WaterBottle::save()
 
 void WaterBottle::load()
 {
-    Serial.println("load");
+    LOG.println("load");
     if (preferences.begin(_id, RO_MODE))
     {
         capacity = preferences.getUInt(KEY_CAPACITY, capacity);
@@ -56,7 +56,7 @@ void WaterBottleController::provide(unsigned long ml)
     if (!wtank->enabled) {
         return;
     }
-    Serial.printf("Water - %s:  %lu\n",wtank->_id, ml);
+    LOG.printf("Water - %s:  %lu\n",wtank->_id, ml);
     wtank->value -= ml;
     if (wtank->value < 0)
     {

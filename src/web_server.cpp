@@ -22,12 +22,12 @@ const char *PARAM_INPUT_2 = "pass";
 // Read File from SPIFFS
 String readFile(fs::FS &fs, const char *path)
 {
-  Serial.printf("Reading file: %s\r\n", path);
+  LOG.printf("Reading file: %s\r\n", path);
 
   File file = fs.open(path);
   if (!file || file.isDirectory())
   {
-    Serial.println("- failed to open file for reading");
+    LOG.println("- failed to open file for reading");
     return String();
   }
 
@@ -43,21 +43,21 @@ String readFile(fs::FS &fs, const char *path)
 // Write file to SPIFFS
 void writeFile(fs::FS &fs, const char *path, const char *message)
 {
-  Serial.printf("Writing file: %s\r\n", path);
+  LOG.printf("Writing file: %s\r\n", path);
 
   File file = fs.open(path, FILE_WRITE);
   if (!file)
   {
-    Serial.println("- failed to open file for writing");
+    LOG.println("- failed to open file for writing");
     return;
   }
   if (file.print(message))
   {
-    Serial.println("- file written");
+    LOG.println("- file written");
   }
   else
   {
-    Serial.println("- frite failed");
+    LOG.println("- frite failed");
   }
 }
 
@@ -106,7 +106,7 @@ String processor(const String &var)
 
 void initNormalWebServer()
 {
-  Serial.print("  WebServer...");
+  LOG.print("  WebServer...");
   // Route for root / web page
   server.on("/", HTTP_GET, [](AsyncWebServerRequest *request)
             { request->send(SPIFFS, "/index.html", "text/html", false, processor); });
@@ -165,11 +165,11 @@ void initNormalWebServer()
       notifications.save();
       request->send(200, "text/plain", "Done."); });
 
-  Serial.println("OK");
+  LOG.println("OK");
 }
 void initAPWebServer()
 {
-  Serial.println("  WebServer AP...");
+  LOG.println("  WebServer AP...");
   // Web Server Root URL
   server.on("/", HTTP_GET, [](AsyncWebServerRequest *request)
             { request->send(SPIFFS, "/wifimanager.html", "text/html"); });
@@ -186,15 +186,15 @@ void initAPWebServer()
           // HTTP POST ssid value
           if (p->name() == PARAM_INPUT_1) {
             String ssid = p->value().c_str();
-            Serial.print("SSID set to: ");
-            Serial.println(ssid);
+            LOG.print("SSID set to: ");
+            LOG.println(ssid);
             preferences.putString(wifiSSIDKey, ssid.c_str());
           }
           // HTTP POST pass value
           if (p->name() == PARAM_INPUT_2) {
             String pass = p->value().c_str();
-            Serial.print("Password set to: ");
-            Serial.println(pass);
+            LOG.print("Password set to: ");
+            LOG.println(pass);
             preferences.putString(wifiPassKey, pass.c_str());
           }
         }
@@ -203,5 +203,5 @@ void initAPWebServer()
       request->send(200, "text/plain", "Done. ESP will restart, connect to your router.");
       delay(3000);
       ESP.restart(); });
-  Serial.println("OK");
+  LOG.println("OK");
 }

@@ -40,32 +40,32 @@ void GlobalTime::init()
 {
     char output[80];
     struct tm timeinfo;
-    Serial.println("  DateTime:");
-    Serial.println("   restore ...");
+    LOG.println("  DateTime:");
+    LOG.println("   restore ...");
     load();
     if (!getLocalTime(&timeinfo))
     {
-        Serial.println(" Error: Could not obtain time info");
+        LOG.println(" Error: Could not obtain time info");
     }
     else
     {
         strftime(output, 80, DATETIME_FORMAT, &timeinfo);
-        Serial.print(output);
-        Serial.println(" ... OK");
+        LOG.print(output);
+        LOG.println(" ... OK");
     }
 
-    Serial.println("   NTP ");
+    LOG.println("   NTP ");
 #ifndef SKIP_NTP_SYNC
     configTime(0, 3600 * timeZone /*+3 GMT*/, ntpServer1, ntpServer2, ntpServer3);
 #endif
     if (!getLocalTime(&timeinfo))
     {
-        Serial.println(" Error: Could not obtain time info");
+        LOG.println(" Error: Could not obtain time info");
         return;
     }
     strftime(output, 80, DATETIME_FORMAT, &timeinfo);
-    Serial.print(output);
-    Serial.println(" ... OK");
+    LOG.print(output);
+    LOG.println(" ... OK");
 }
 
 void GlobalTime::loop()
@@ -97,5 +97,5 @@ void GlobalTime::save()
     preferences.begin(globalTimeConfigKey, RW_MODE);
     preferences.putULong(globalTimeKey, lastSyncDateTime);
     preferences.end();
-    Serial.println("Save current date time");
+    LOG.println("Save current date time");
 }

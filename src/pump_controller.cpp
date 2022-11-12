@@ -8,12 +8,12 @@ const char *PumpModeName[] = {"Not Calibrated", "Calibrating", "Ready", "Working
 
 void PumpController::_runPump()
 {
-    Serial.println("_runPump");
+    LOG.println("_runPump");
     pump->start(power, isInverted);
 }
 void PumpController::_stopPump()
 {
-    Serial.println("_stopPump");
+    LOG.println("_stopPump");
     pump->stop();
 }
 
@@ -48,7 +48,7 @@ void PumpController::_executeStartWork()
     {
         return;
     }
-    Serial.println("_executeStartWork");
+    LOG.println("_executeStartWork");
     tmrAction.restart();
     mode = WorkingMode;
     tmrWork.setDuration(truncf(mlAtTime / speedMlPerMs));
@@ -61,7 +61,7 @@ void PumpController::_executeStopWork()
     {
         return;
     }
-    Serial.println("_executeStopWork");
+    LOG.println("_executeStopWork");
     if (mode != WorkingMode)
     {
         tmrWork.stop();
@@ -93,7 +93,7 @@ void PumpController::execute()
 
 void PumpController::stopImmediate()
 {
-    Serial.println("stopImmediate");
+    LOG.println("stopImmediate");
     _stopPump();
     tmrAction.restart();
     tmrWork.stop();
@@ -105,7 +105,7 @@ void PumpController::stopImmediate()
 }
 void PumpController::startImmediate()
 {
-    Serial.println("startImmediate");
+    LOG.println("startImmediate");
     tmrAction.restart();
     mode = TurnOnMode;
     tmrWork.stop();
@@ -114,7 +114,7 @@ void PumpController::startImmediate()
 
 void PumpController::emergencyStop()
 {
-    Serial.println("emergencyStop");
+    LOG.println("emergencyStop");
     mode = NotCalibratedMode;
     _stopPump();
     tmrCalibration.stop();
@@ -123,7 +123,7 @@ void PumpController::emergencyStop()
 
 void PumpController::startCalibration()
 {
-    Serial.println("startCalibration");
+    LOG.println("startCalibration");
     if (!(mode == ReadyMode || mode == NotCalibratedMode))
     {
         return;
@@ -138,14 +138,14 @@ void PumpController::_executeCalibrationProcess()
     {
         return;
     }
-    Serial.println("_executeCalibrationProcess");
+    LOG.println("_executeCalibrationProcess");
     tmrCalibration.stop();
     mode = NotCalibratedMode;
     _stopPump();
 }
 void PumpController::finishCalibration()
 {
-    Serial.println("finishCalibration");
+    LOG.println("finishCalibration");
     speedMlPerMs = calibration100SecMl / (100.0 * 1000.0);
     if (speedMlPerMs <= 0)
     {
@@ -184,17 +184,17 @@ void PumpController::setEnabled(bool newValue)
 
 void PumpController::init()
 {
-    Serial.print("  PumpController...");
-    Serial.print("    ");
+    LOG.print("  PumpController...");
+    LOG.print("    ");
     pinMode(MOTORS_ON_PIN, OUTPUT);
     digitalWrite(MOTORS_ON_PIN, HIGH);
     load();
-    Serial.println("    OK");
+    LOG.println("    OK");
 }
 
 void PumpController::save()
 {
-    Serial.println("save");
+    LOG.println("save");
     preferences.begin(_id, RW_MODE);
     preferences.putBool(KEY_isEnabled, _enabled);
     preferences.putFloat(KEY_mlAtTime, mlAtTime);
@@ -209,7 +209,7 @@ void PumpController::save()
 
 void PumpController::saveLastAction()
 {
-    Serial.println("saveLastAction");
+    LOG.println("saveLastAction");
     preferences.begin(_id, RW_MODE);
     preferences.putULong(KEY_INTERVAL_SEC, tmrAction.getDuration());
     preferences.putULong(KEY_START_DATETIME_SEC, tmrAction.getStartTime());
@@ -218,7 +218,7 @@ void PumpController::saveLastAction()
 
 void PumpController::load()
 {
-    Serial.println("load");
+    LOG.println("load");
     if (preferences.begin(_id, RO_MODE))
     {
         _enabled = preferences.getBool(KEY_isEnabled, _enabled);

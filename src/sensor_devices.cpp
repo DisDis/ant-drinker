@@ -9,48 +9,48 @@ SensorDevices::SensorDevices(ON_WATER_LEVEL_CHANGED_CALLBACK waterLevelChangedCa
 
 void SensorDevices::init()
 {
-    Serial.println("  sensors:");
+    LOG.println("  sensors:");
     pinMode(SENSOR_T_H_PIN, INPUT);
 #ifdef SENSOR_T_H_DHT
-    Serial.print("    DHT...");
+    LOG.print("    DHT...");
 
     sensorTH.begin();
-    Serial.println("OK");
+    LOG.println("OK");
 #endif
 #ifdef SENSOR_T_H_AM2320
-    Serial.print("    AM2320..");
-    // Serial.print("LIBRARY: ");
-    // Serial.print(AM232X_LIB_VERSION);
+    LOG.print("    AM2320..");
+    // LOG.print("LIBRARY: ");
+    // LOG.print(AM232X_LIB_VERSION);
     if (!sensorTH.begin())
     {
-        Serial.println(F(" AM2320 failed"));
+        LOG.println(F(" AM2320 failed"));
     }
     else
     {
         // sensorTH.wakeUp();
-        // Serial.println("GET SENSOR INFO (experimental)");
-        // Serial.print("  Model:\t");
-        // Serial.println(sensorTH.getModel());
-        // Serial.print("  Version:\t");
-        // Serial.println(sensorTH.getVersion());
-        // Serial.print("  DevId:\t");
-        // Serial.println(sensorTH.getDeviceID());
+        // LOG.println("GET SENSOR INFO (experimental)");
+        // LOG.print("  Model:\t");
+        // LOG.println(sensorTH.getModel());
+        // LOG.print("  Version:\t");
+        // LOG.println(sensorTH.getVersion());
+        // LOG.print("  DevId:\t");
+        // LOG.println(sensorTH.getDeviceID());
 
-        // Serial.println();
-        // Serial.println("GET REGISTERS (experimental)");
-        // Serial.print(" Status:\t");
-        // Serial.println(sensorTH.getStatus());
-        // Serial.print("  UserA:\t");
-        // Serial.println(sensorTH.getUserRegisterA());
-        // Serial.print("  UserB:\t");
-        // Serial.println(sensorTH.getUserRegisterB());
-        Serial.println("OK");
+        // LOG.println();
+        // LOG.println("GET REGISTERS (experimental)");
+        // LOG.print(" Status:\t");
+        // LOG.println(sensorTH.getStatus());
+        // LOG.print("  UserA:\t");
+        // LOG.println(sensorTH.getUserRegisterA());
+        // LOG.print("  UserB:\t");
+        // LOG.println(sensorTH.getUserRegisterB());
+        LOG.println("OK");
     }
 #endif
-    Serial.print("    Low Water...");
+    LOG.print("    Low Water...");
     pinMode(SENSOR_LOW_WATER, INPUT);
-    Serial.println("OK");
-    Serial.print("    state...");
+    LOG.println("OK");
+    LOG.print("    state...");
     load();
 }
 
@@ -67,11 +67,11 @@ void SensorDevices::poll()
     // case AM232X_OK:
     //     currentTemperature = sensorTH.getTemperature();
     //     currentHumidity = sensorTH.getHumidity();
-    //     // Serial.println("OK");
+    //     // LOG.println("OK");
     //     break;
     // default:
-    //     Serial.print("AM2320 error: ");
-    //     Serial.println(status);
+    //     LOG.print("AM2320 error: ");
+    //     LOG.println(status);
     //     break;
     // }
     if (hasReadT)
@@ -111,7 +111,7 @@ void SensorDevices::poll()
 
 void SensorDevices::save()
 {
-    Serial.println("save");
+    LOG.println("save");
     preferences.begin(SENSOR_DEVICES_PREF_NAME, RW_MODE);
     // preferences.putBool(KEY_isEnabled, isEnabled);
     // preferences.putFloat(KEY_mlAtTime, mlAtTime);
@@ -122,7 +122,7 @@ void SensorDevices::save()
 }
 void SensorDevices::load()
 {
-    Serial.println("load");
+    LOG.println("load");
     if (preferences.begin(SENSOR_DEVICES_PREF_NAME, RO_MODE))
     {
         // isEnabled = preferences.getBool(KEY_isEnabled,isEnabled);

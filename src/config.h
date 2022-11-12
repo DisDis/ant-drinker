@@ -65,4 +65,9 @@
 #define LED_PIN 13
 #define LED_BUILTIN 16
 
+#define GENERAL_DEBUG 
+#define GENERAL_DEBUG_TELNET  (false)                       // true - отладочные сообщения будут выводиться в telnet вместо Serial порта (для удалённой отладки без подключения usb кабелем)
+#define TELNET_PORT           (23U)                         // номер telnet порта
+
+
 #endif

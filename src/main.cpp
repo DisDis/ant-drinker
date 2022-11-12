@@ -82,24 +82,24 @@ TimerMs mainScreen(70, 1, 0);
 // Initialize SPIFFS
 void initSPIFFS()
 {
-  Serial.printf("  SPIFFS...");
+  LOG.printf("  SPIFFS...");
   if (!SPIFFS.begin(true))
   {
-    Serial.println("An error has occurred while mounting SPIFFS");
+    LOG.println("An error has occurred while mounting SPIFFS");
   }
-  Serial.println("OK: SPIFFS mounted successfully");
+  LOG.println("OK: SPIFFS mounted successfully");
 }
 
 void initButtons()
 {
-  Serial.print("  buttons...");
+  LOG.print("  buttons...");
   pinMode(ButtonClickPin, INPUT_PULLUP);
   pinMode(ButtonLeftPin, INPUT_PULLUP);
   pinMode(ButtonRightPin, INPUT_PULLUP);
   pinMode(ButtonUpPin, INPUT_PULLUP);
   pinMode(ButtonDownPin, INPUT_PULLUP);
   tmrButtons.setPeriodMode();
-  Serial.println("OK");
+  LOG.println("OK");
 }
 
 void updatingProgress(size_t progress, size_t size)
@@ -114,25 +114,25 @@ void updatingProgress(size_t progress, size_t size)
 
 void initOTA()
 {
-  Serial.print("  OTA...");
+  LOG.print("  OTA...");
   AsyncElegantOTA.begin(&server);
   AsyncElegantOTA.setID(VERSION);
   Update.onProgress(updatingProgress);
-  Serial.println("OK");
+  LOG.println("OK");
 }
 
 void initWaterBottles()
 {
-  Serial.print("  Water...");
+  LOG.print("  Water...");
   waterBottle1.init();
   waterBottle2.init();
   waterBottleController1.init();
   waterBottleController2.init();
-  Serial.println("OK");
+  LOG.println("OK");
 }
 void initPumps()
 {
-  Serial.print("  Pumps...");
+  LOG.print("  Pumps...");
 
   pump1.init();
   pumpController1.init();
@@ -140,13 +140,13 @@ void initPumps()
   pump2.init();
   pumpController2.init();
 #endif
-  Serial.println("OK");
+  LOG.println("OK");
 }
 void scanI2C()
 {
   byte error, address;
   int nDevices;
-  Serial.println("Scanning I2C...");
+  LOG.println("Scanning I2C...");
   nDevices = 0;
   for (address = 1; address < 127; address++)
   {
@@ -154,31 +154,31 @@ void scanI2C()
     error = Wire.endTransmission();
     if (error == 0)
     {
-      Serial.print("I2C device found at address 0x");
+      LOG.print("I2C device found at address 0x");
       if (address < 16)
       {
-        Serial.print("0");
+        LOG.print("0");
       }
-      Serial.println(address, HEX);
+      LOG.println(address, HEX);
       nDevices++;
     }
     else if (error == 4)
     {
-      Serial.print("Unknow error at address 0x");
+      LOG.print("Unknow error at address 0x");
       if (address < 16)
       {
-        Serial.print("0");
+        LOG.print("0");
       }
-      Serial.println(address, HEX);
+      LOG.println(address, HEX);
     }
   }
   if (nDevices == 0)
   {
-    Serial.println("No I2C devices found\n");
+    LOG.println("No I2C devices found\n");
   }
   else
   {
-    Serial.println("done\n");
+    LOG.println("done\n");
   }
 }
 void setup()
@@ -186,9 +186,9 @@ void setup()
   // Serial port for debugging purposes
   Serial.begin(500000);
   // Serial.setDebugOutput(true);
-  Serial.println(SEPARATE_LINE);
-  Serial.printf("Project version v%s, built %s\n", VERSION, BUILD_TIMESTAMP);
-  Serial.println("Init system:");
+  LOG.println(SEPARATE_LINE);
+  LOG.printf("Project version v%s, built %s\n", VERSION, BUILD_TIMESTAMP);
+  LOG.println("Init system:");
   Wire.begin(SDA, SCL, I2C_FREQ);
   Wire.setTimeOut(100);
   displayDevice.init();
@@ -215,6 +215,18 @@ void setup()
   server.begin();
   globalTime.init();
 #endif
+
+  // TELNET
+#if defined(GENERAL_DEBUG) && GENERAL_DEBUG_TELNET
+  telnetServer.begin();
+  for (uint8_t i = 0; i < 100; i++) // пауза 10 секунд в отладочном режиме, чтобы успеть подключиться по протоколу telnet до вывода первых сообщений
+  {
+    handleTelnetClient();
+    delay(100);
+    // ESP.wdtFeed();
+  }
+#endif
+
 #ifdef SCAN_I2C
   scanI2C();
 #endif
@@ -222,9 +234,9 @@ void setup()
   ledDevice.init();
   buzzerDevice.init();
   notifications.init();
-  Serial.println("System is initialized");
-  Serial.println(SEPARATE_LINE);
-  Serial.println();
+  LOG.println("System is initialized");
+  LOG.println(SEPARATE_LINE);
+  LOG.println();
   display.fillScreen(ST7735_BLACK);
 }
 
@@ -417,7 +429,7 @@ void pollButtons()
     applicationState.buttonClick = lastStateC == HIGH && currentState == LOW;
     if (applicationState.buttonClick)
     {
-      // Serial.println("Click");
+      // LOG.println("Click");
       applicationState.lastActionMillis = currentMillis;
     }
     lastStateC = currentState;
@@ -426,7 +438,7 @@ void pollButtons()
     applicationState.buttonLeft = lastStateL == HIGH && currentState == LOW;
     if (applicationState.buttonLeft)
     {
-      // Serial.println("Left");
+      // LOG.println("Left");
       applicationState.lastActionMillis = currentMillis;
     }
     lastStateL = currentState;
@@ -435,7 +447,7 @@ void pollButtons()
     applicationState.buttonRight = lastStateR == HIGH && currentState == LOW;
     if (applicationState.buttonRight)
     {
-      // Serial.println("Right");
+      // LOG.println("Right");
       applicationState.lastActionMillis = currentMillis;
     }
     lastStateR = currentState;
@@ -444,7 +456,7 @@ void pollButtons()
     applicationState.buttonUp = lastStateU == HIGH && currentState == LOW;
     if (applicationState.buttonUp)
     {
-      // Serial.println("Up");
+      // LOG.println("Up");
       applicationState.lastActionMillis = currentMillis;
     }
     lastStateU = currentState;
@@ -453,7 +465,7 @@ void pollButtons()
     applicationState.buttonDown = lastStateD == HIGH && currentState == LOW;
     if (applicationState.buttonDown)
     {
-      // Serial.println("Down");
+      // LOG.println("Down");
       applicationState.lastActionMillis = currentMillis;
     }
     lastStateD = currentState;
@@ -477,4 +489,7 @@ void loop()
   waterBottleController2.execute();
   notifications.execute();
   displayDevice.swapBuffer();
+  #if defined(GENERAL_DEBUG) && GENERAL_DEBUG_TELNET
+  handleTelnetClient();
+  #endif
 }

@@ -63,8 +63,8 @@ result action1(eventMask e)
 
 result action2(eventMask e, navNode &nav, prompt &item)
 {
-    // Serial.print(e);
-    // Serial.println(" action2 executed, quiting menu");
+    // LOG.print(e);
+    // LOG.println(" action2 executed, quiting menu");
     return quit;
 }
 
@@ -198,20 +198,20 @@ result pump1Save(eventMask e)
 
 result pump1Enabled(eventMask e)
 {
-    Serial.println("Menu - pump1Enabled");
+    LOG.println("Menu - pump1Enabled");
     pumpController1.setEnabled(true);
     return proceed;
 }
 result pump1Disabled(eventMask e)
 {
-    Serial.println("Menu - pump1Disabled");
+    LOG.println("Menu - pump1Disabled");
     pumpController1.setEnabled(false);
     return proceed;
 }
 
 result pump1FinishCalib(eventMask e)
 {
-    Serial.println("Menu - pump1FinishCalib");
+    LOG.println("Menu - pump1FinishCalib");
     pumpController1.finishCalibration();
     return proceed;
 }
@@ -219,7 +219,7 @@ result pump1FinishCalib(eventMask e)
 bool pumpController1isEnabled = pumpController1.getEnabled();
 result pump1SyncEnabled(eventMask e)
 {
-    Serial.println("Menu - pump1SyncEnabled");
+    LOG.println("Menu - pump1SyncEnabled");
     pumpController1isEnabled = pumpController1.getEnabled();
     return proceed;
 }

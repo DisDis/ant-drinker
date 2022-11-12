@@ -7,26 +7,26 @@
 void initAPWiFi()
 {
   // Connect to Wi-Fi network with SSID and password
-  Serial.println("  WIFI Setting AP (Access Point)");
+  LOG.println("  WIFI Setting AP (Access Point)");
   // NULL sets an open Access Point
   WiFi.softAP("ESP-WIFI-MANAGER", NULL);
 
   IPAddress IP = WiFi.softAPIP();
-  Serial.print("    AP IP address: ");
-  Serial.println(IP);
+  LOG.print("    AP IP address: ");
+  LOG.println(IP);
 }
 
 // Initialize WiFi
 bool initWiFi()
 {
-  Serial.print("  WiFi...");
+  LOG.print("  WiFi...");
   preferences.begin(wifiConfigKey, RO_MODE);
 
   String ssid = preferences.getString(wifiSSIDKey, "");
   if (ssid == "")
   {
     preferences.end();
-    Serial.println("Undefined SSID.");
+    LOG.println("Undefined SSID.");
     return false;
   }
 
@@ -36,7 +36,7 @@ bool initWiFi()
   WiFi.setHostname(HOSTNAME_WIFI);
   WiFi.begin(ssid.c_str(), pass.c_str());
   preferences.end();
-  Serial.println("Connecting to WiFi...");
+  LOG.println("Connecting to WiFi...");
 
   // Timer variables
   unsigned long previousMillis = 0;
@@ -45,18 +45,18 @@ bool initWiFi()
   unsigned long currentMillis = millis();
   previousMillis = currentMillis;
 
-  Serial.print("    ");
+  LOG.print("    ");
   while (WiFi.status() != WL_CONNECTED)
   {
     currentMillis = millis();
     if (currentMillis - previousMillis >= interval)
     {
-      Serial.println("Failed to connect.");
+      LOG.println("Failed to connect.");
       return false;
     }
   }
-  Serial.print("    IP:");
-  Serial.println(WiFi.localIP());
-  Serial.println("  WiFi...connected");
+  LOG.print("    IP:");
+  LOG.println(WiFi.localIP());
+  LOG.println("  WiFi...connected");
   return true;
 }

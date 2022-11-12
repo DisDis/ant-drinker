@@ -31,4 +31,13 @@ extern PumpController pumpController2;
 extern LEDDevice ledDevice;
 extern SensorDevices sensorDevices;
 
+#if defined(GENERAL_DEBUG) && GENERAL_DEBUG_TELNET
+extern WiFiServer telnetServer;                       // telnet сервер
+extern WiFiClient telnet;                                          // обработчик событий telnet клиента
+extern void handleTelnetClient();
+#define LOG                   telnet
+#else
+#define LOG                   Serial
+#endif
+
 #endif

@@ -20,17 +20,17 @@ Notifications::Notifications()
 
 void Notifications::init()
 {
-    Serial.print("  Notifications...");
-    Serial.print("    ");
+    LOG.print("  Notifications...");
+    LOG.print("    ");
     load();
     mqttN.init();
     telegramN.init();
-    Serial.println("    OK");
+    LOG.println("    OK");
 }
 
 void Notifications::save()
 {
-    Serial.println("save");
+    LOG.println("save");
     preferences.begin(NOTIFICATIONS_PREF_NAME, RW_MODE);
     preferences.putString(KEY_TELEGRAM_TOKEN, telegramN.getToken());
     preferences.putString(KEY_TELEGRAM_CHAT_ID, telegramN.getChatId());
@@ -45,7 +45,7 @@ void Notifications::save()
 
 void Notifications::load()
 {
-    Serial.println("load");
+    LOG.println("load");
     if (preferences.begin(NOTIFICATIONS_PREF_NAME, RO_MODE))
     {
         telegramN.setToken(preferences.getString(KEY_TELEGRAM_TOKEN, String(BOT_TOKEN)).c_str());

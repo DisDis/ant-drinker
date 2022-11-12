@@ -23,7 +23,7 @@ DisplayDevice::DisplayDevice()
 
 void DisplayDevice::init()
 {
-    Serial.print("  display...");
+    LOG.print("  display...");
 
     // Use this initializer if you're using a 1.8" TFT
     // tft.initR(INITR_BLACKTAB);   // initialize a ST7735S chip, black tab
@@ -56,7 +56,7 @@ void DisplayDevice::init()
     // tft.init(174, 320);           // Init ST7789 174x320
     display.invertDisplay(1);
     //display.setSPISpeed(70000000);
-    Serial.print(".init.");
+    LOG.print(".init.");
     turnOn();
     display.setTextSize(1);
     display.setTextWrap(false);
@@ -65,20 +65,20 @@ void DisplayDevice::init()
     display.setRotation(3);
     display.enableTearing(false);
     display.fillScreen(ST77XX_BLACK);
-    Serial.println("OK");
+    LOG.println("OK");
     showSplashScreen();
     swapBuffer();
 }
 
 void DisplayDevice::showSplashScreen()
 {
-    Serial.print("  Splash...");
+    LOG.print("  Splash...");
     display.drawBitmap(64, SCREEN_HEIGHT - Splash_Logo_height, splash_Logo_bits, Splash_Logo_width, Splash_Logo_height, ST7735_WHITE);
     // display.drawRGBBitmap();
     display.setCursor(0, 0);
     display.printf("v%s\n", VERSION);
     display.printf("%s", BUILD_TIMESTAMP);
-    Serial.println("OK");
+    LOG.println("OK");
 }
 
 void DisplayDevice::detectTimeOff()
@@ -89,7 +89,7 @@ void DisplayDevice::detectTimeOff()
         {
             applicationState.isDisplayOn = false;
             display.fillScreen(ST77XX_BLACK);
-            Serial.println("Display turns off");
+            LOG.println("Display turns off");
             turnOff();
             applicationState.currentPage = idlePage;
         }
@@ -99,7 +99,7 @@ void DisplayDevice::detectTimeOff()
         if (currentMillis - applicationState.lastActionMillis < automaticScreenOffTimeMs)
         {
             applicationState.isDisplayOn = true;
-            Serial.println("Display turns on");
+            LOG.println("Display turns on");
             turnOn();
             applicationState.currentPage = mainPage;
         }
