@@ -21,8 +21,9 @@
 #define RO_MODE true
 #define RW_MODE false
 
-#define SCAN_I2C
+// #define SCAN_I2C
 #define I2C_FREQ 100000
+#define DAC_MCP4725_ADDR 0x60
 
 #define wifiSSIDKey "ssid"
 #define wifiPassKey "pass"

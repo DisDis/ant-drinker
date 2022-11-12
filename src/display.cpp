@@ -5,6 +5,7 @@
 #include "state.h"
 #include "common.h"
 #include "Version.h"
+#include <Adafruit_MCP4725.h>
 
 #define DISPLAYOFF 0xAE
 #define DISPLAYON 0xAF
@@ -14,7 +15,9 @@
 
 // Adafruit_SSD1306 display = Adafruit_SSD1306(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 Adafruit_ST7735 display = Adafruit_ST7735(TFT_CS, TFT_DC, TFT_RST);
-
+#ifdef DAC_MCP4725_ADDR
+Adafruit_MCP4725 dac;
+#endif
 DisplayDevice displayDevice;
 
 DisplayDevice::DisplayDevice()
@@ -23,6 +26,12 @@ DisplayDevice::DisplayDevice()
 
 void DisplayDevice::init()
 {
+#ifdef DAC_MCP4725_ADDR
+    LOG.print("  DAC...");
+    dac.begin(DAC_MCP4725_ADDR);
+    LOG.println("OK");
+#endif
+
     LOG.print("  display...");
 
     // Use this initializer if you're using a 1.8" TFT
@@ -55,7 +64,7 @@ void DisplayDevice::init()
     // OR use this initializer (uncomment) if using a 1.47" 174x320 TFT:
     // tft.init(174, 320);           // Init ST7789 174x320
     display.invertDisplay(1);
-    //display.setSPISpeed(70000000);
+    // display.setSPISpeed(70000000);
     LOG.print(".init.");
     turnOn();
     display.setTextSize(1);
@@ -109,11 +118,17 @@ void DisplayDevice::detectTimeOff()
 void DisplayDevice::turnOn(void)
 {
     display.enableDisplay(true);
+    #ifdef DAC_MCP4725_ADDR
+    dac.setVoltage(4095, false);
+    #endif
 }
 
 void DisplayDevice::turnOff(void)
 {
     display.enableDisplay(false);
+    #ifdef DAC_MCP4725_ADDR
+    dac.setVoltage(0, false);
+    #endif
 }
 void DisplayDevice::swapBuffer()
 {
